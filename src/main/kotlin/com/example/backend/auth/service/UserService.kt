@@ -1,0 +1,46 @@
+package com.example.backend.auth.service
+
+import com.example.backend.user.UserRepository
+import com.example.backend.userblock.UserBlock
+import com.example.backend.userblock.UserBlockRepository
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+@Service
+class UserService(
+    private val userRepository: UserRepository,
+    private val userBlockRepository: UserBlockRepository
+
+) {
+   @Transactional
+    fun updateNickname(userId: Long, newNickname: String) {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid User.")
+
+        user.updateNickname(newNickname)
+    }
+
+    @Transactional
+    fun blockUser(blockerId: Long, blockedId: Long) {
+        require(blockerId != blockedId) { "자기 자신을 차단할 수 없습니다." }
+
+        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId, blockedId)) {
+            throw IllegalStateException("이미 차단된 사용자입니다.")
+        }
+
+        val blocker = userRepository.findByIdOrNull(blockerId)
+            ?: throw IllegalArgumentException("차단을 요청한 유저를 찾을 수 없습니다.")
+
+        val blocked = userRepository.findByIdOrNull(blockedId)
+            ?: throw IllegalArgumentException("차단 대상 유저를 찾을 수 없습니다.")
+
+        val userBlock = UserBlock(blocker = blocker, blocked = blocked)
+        userBlockRepository.save(userBlock)
+    }
+
+    @Transactional
+    fun unblockUser(blockerId: Long, blockedId: Long) {
+        userBlockRepository.deleteByBlockerIdAndBlockedId(blockerId, blockedId)
+    }
+}

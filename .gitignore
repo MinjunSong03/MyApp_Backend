@@ -1,0 +1,71 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Kotlin ###
+.kotlin
+
+### Backend 보안 ###
+application-secret.*
+application-local.*
+local.properties
+*.env
+*.env.*
+*.secret
+
+### 인증서 및 보안 키 ###
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+
+### 배포 빌드 산출물 및 실행 로그 ###
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+logs/
+*.log
+*.hprof
+hs_err_pid*
+
+### OS 메타데이터 ###
+.DS_Store
+Thumbs.db
+
+.artifacts/
+.artifacts
