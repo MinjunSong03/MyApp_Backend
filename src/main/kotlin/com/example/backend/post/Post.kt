@@ -75,8 +75,13 @@ class Post(
         this.viewCount += 1
     }
 
-    fun updateHideStatus(isHidden: Boolean) {
-        this.isHidden = isHidden
+    fun hide() {
+        this.isHidden = true
+        this.updatedAt = LocalDateTime.now()
+    }
+
+    fun unhide() {
+        this.isHidden = false
         this.updatedAt = LocalDateTime.now()
     }
 }

@@ -51,7 +51,8 @@ data class PostResponse(
     val mediaUrl: String,
     val viewCount: Long,
     val createdAt: LocalDateTime,
-    val isMine: Boolean
+    val isMine: Boolean,
+    val isHidden: Boolean
 ) {
     companion object {
         fun from(post: Post, currentUserId: Long): PostResponse = PostResponse(
@@ -66,7 +67,8 @@ data class PostResponse(
             mediaUrl = post.mediaUrl,
             viewCount = post.viewCount,
             createdAt = post.createdAt,
-            isMine = post.user.id == currentUserId
+            isMine = post.user.id == currentUserId,
+            isHidden = post.isHidden
         )
     }
 }

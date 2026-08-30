@@ -53,19 +53,19 @@ class PostService (
 
     @Transactional(readOnly = true)
     fun getMyActPost(userId: Long, pageable: Pageable): Slice<PostResponse> {
-        val posts = postRepository.findByUserIdAndIsHiddenFalse(userId, pageable)
+        val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalse(PostStatus.ACTIVE, userId, pageable)
 
         return posts.map { PostResponse.from(post = it, currentUserId = userId) }
     }
 
     @Transactional(readOnly = true)
     fun getMyHiddenPost(userId: Long, pageable: Pageable): Slice<PostResponse> {
-        val posts = postRepository.findByUserIdAndIsHiddenTrue(userId, pageable)
+        val posts = postRepository.findByStatusAndUserIdAndIsHiddenTrue(PostStatus.ACTIVE, userId, pageable)
 
         return posts.map { PostResponse.from(post = it, currentUserId = userId) }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     fun getPostById(userId: Long, postId: Long): PostResponse {
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user.")
@@ -78,7 +78,7 @@ class PostService (
         return PostResponse.from(post = post, currentUserId = userId)
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     fun getPostDetail(userId: Long, postId: Long): PostResponse {
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("Invalid post")
@@ -149,7 +149,7 @@ class PostService (
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
 
         if (user.id == post.user.id) {
-            post.updateHideStatus(true)
+            post.hide()
         } else {
             if (userHiddenPostRepository.existsByUserIdAndPostId(userId, postId)) {
                 throw IllegalArgumentException("이미 숨김 처리된 게시물입니다.")
@@ -160,6 +160,20 @@ class PostService (
         }
     }
 
+    @Transactional
+    fun unhidePost(userId: Long, postId: Long) {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user.")
+
+        val post = postRepository.findByIdOrNull(postId)
+            ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
+
+        if (user.id == post.user.id) {
+            post.unhide()
+    } else {
+            throw IllegalArgumentException("본인의 게시물만 숨김 해제 가능합니다.")
+        }
+    }
 }
 
 

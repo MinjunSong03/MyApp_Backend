@@ -28,15 +28,23 @@ interface PostRepository: JpaRepository<Post, Long> {
     ): Slice<Post>
 
     // (게시물 상태에 따른) 나 혹은 타인의 게시물 조회.
-    fun findByUserIdAndStatusOrderByCreatedAtDesc(
-        userId: Long,
+    fun findByStatusAndUserIdOrderByCreatedAtDesc(
         status: PostStatus,
+        userId: Long,
         pageable: Pageable
     ): Slice<Post>
 
     // 내가 숨김 처리하지 않은 나의 모든 게시물 조회.
-    fun findByUserIdAndIsHiddenFalse(userId: Long, pageable: Pageable): Slice<Post>
+    fun findByStatusAndUserIdAndIsHiddenFalse(
+        status: PostStatus,
+        userId: Long,
+        pageable: Pageable
+    ): Slice<Post>
 
     // 내가 숨김 처리한 나의 모든 게시물 조회.
-    fun findByUserIdAndIsHiddenTrue(userId: Long, pageable: Pageable): Slice<Post>
+    fun findByStatusAndUserIdAndIsHiddenTrue(
+        status: PostStatus,
+        userId: Long,
+        pageable: Pageable
+    ): Slice<Post>
 }
