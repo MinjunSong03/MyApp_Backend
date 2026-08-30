@@ -1,8 +1,12 @@
 package com.example.backend.auth.service
 
+import com.example.backend.auth.BlockedUserResponse
+import com.example.backend.auth.PostResponse
 import com.example.backend.user.UserRepository
 import com.example.backend.userblock.UserBlock
 import com.example.backend.userblock.UserBlockRepository
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -11,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional
 class UserService(
     private val userRepository: UserRepository,
     private val userBlockRepository: UserBlockRepository
-
 ) {
    @Transactional
     fun updateNickname(userId: Long, newNickname: String) {
@@ -42,5 +45,17 @@ class UserService(
     @Transactional
     fun unblockUser(blockerId: Long, blockedId: Long) {
         userBlockRepository.deleteByBlockerIdAndBlockedId(blockerId, blockedId)
+    }
+
+    @Transactional(readOnly = true)
+    fun getMyBlockedUser(userId: Long, pageable: Pageable): Slice<BlockedUserResponse> {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid User.")
+
+        require(user.id == userId) { "본인 인증에 실패했습니다." }
+
+        val users =  userBlockRepository.findBlockedIdsByBlockerId(userId, pageable)
+
+        return users.map { BlockedUserResponse.from(user = it) }
     }
 }

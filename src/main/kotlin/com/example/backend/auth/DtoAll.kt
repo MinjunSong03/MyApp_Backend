@@ -3,6 +3,8 @@ package com.example.backend.auth
 import com.example.backend.post.MediaType
 import com.example.backend.post.Post
 import com.example.backend.report.ReportReason
+import com.example.backend.user.User
+import com.example.backend.user.UserStatus
 import java.time.LocalDateTime
 
 data class OAuthLoginRequest(
@@ -73,3 +75,19 @@ data class CreateReportRequest(
     val reason: ReportReason,
     val detail: String
 )
+
+data class BlockedUserResponse(
+    val id: Long,
+    val nickname: String,
+    val profileImageUrl: String?,
+    val status: UserStatus
+) {
+    companion object {
+        fun from(user: User): BlockedUserResponse = BlockedUserResponse(
+            id = user.id,
+            nickname = user.nickname,
+            profileImageUrl = user.profileImageUrl,
+            status = user.status
+        )
+    }
+}

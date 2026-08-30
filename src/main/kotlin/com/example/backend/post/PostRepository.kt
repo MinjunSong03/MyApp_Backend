@@ -13,7 +13,9 @@ interface PostRepository: JpaRepository<Post, Long> {
         SELECT p FROM Post p 
         WHERE p.status = :status 
           AND p.isHidden = false 
-          AND (:blockedIds IS NULL OR p.user.id NOT IN :blockedIds)
+          AND p.user.id NOT IN (
+          SELECT ub.blocked.id FROM UserBlock ub WHERE ub.blocker.id = :currentUserId
+          )
           AND p.id NOT IN (
               SELECT hp.post.id FROM UserHiddenPost hp WHERE hp.user.id = :currentUserId
           )
@@ -21,7 +23,6 @@ interface PostRepository: JpaRepository<Post, Long> {
     """)
     fun findFilteredFeed(
         @Param("status") status: PostStatus,
-        @Param("blockedIds") blockedIds: List<Long>?,
         @Param("currentUserId") currentUserId: Long,
         pageable: Pageable
     ): Slice<Post>

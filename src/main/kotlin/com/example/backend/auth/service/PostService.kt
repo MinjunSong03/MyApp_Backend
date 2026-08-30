@@ -45,9 +45,8 @@ class PostService (
 
     @Transactional(readOnly = true)
     fun getHomeFeed(userId: Long, pageable: Pageable): Slice<PostResponse> {
-        val blockedIds = userBlockRepository.findBlockedIdsByBlockerId(userId)
 
-        val posts = postRepository.findFilteredFeed(PostStatus.ACTIVE, blockedIds, userId, pageable)
+        val posts = postRepository.findFilteredFeed(PostStatus.ACTIVE, userId, pageable)
 
         return posts.map { PostResponse.from(post = it, currentUserId = userId) }
     }
