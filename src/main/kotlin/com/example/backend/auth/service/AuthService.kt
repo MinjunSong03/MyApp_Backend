@@ -6,6 +6,8 @@ import com.example.backend.auth.KakaoClient
 import com.example.backend.user.AuthProvider
 import com.example.backend.user.User
 import com.example.backend.user.UserRepository
+import com.example.backend.userHiddenPost.UserHiddenPostRepository
+import com.example.backend.userblock.UserBlockRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 class AuthService(
     private val kakaoClient: KakaoClient,
     private val userRepository: UserRepository,
+    private val userBlockRepository: UserBlockRepository,
+    private val userHiddenPostRepository: UserHiddenPostRepository,
     private val jwtTokenProvider: JwtTokenProvider
 ) {
     @Transactional
@@ -48,7 +52,11 @@ class AuthService(
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid User.")
 
-        kakaoClient.unlink(user.oauthId ?: "")
-        userRepository.delete(user)
+        user.oauthId?.let { kakaoClient.unlink(it) }
+
+        userBlockRepository.deleteAllByBlockerId(userId)
+        userHiddenPostRepository.deleteAllByUserId(userId)
+
+        user.withdraw()
     }
 }

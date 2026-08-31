@@ -7,5 +7,7 @@ interface UserHiddenPostRepository: JpaRepository<UserHiddenPost, Long> {
 
     fun deleteByUserIdAndPostId(userId: Long, postId: Long)
 
+    fun deleteAllByUserId(userId: Long)
+
     fun findByUserId(userId: Long): List<UserHiddenPost>
 }

@@ -42,8 +42,8 @@ data class EditPostRequest(
 data class PostResponse(
     val id: Long,
     val userId: Long,
-    val authorNickname: String,
-    val authorProfileImageUrl: String?,
+    val userNickname: String,
+    val userProfileImageUrl: String?,
     val title: String,
     val description: String,
     val mediaType: MediaType,
@@ -52,14 +52,15 @@ data class PostResponse(
     val viewCount: Long,
     val createdAt: LocalDateTime,
     val isMine: Boolean,
-    val isHidden: Boolean
+    val isHidden: Boolean,
+    val isUserDeleted: Boolean
 ) {
     companion object {
         fun from(post: Post, currentUserId: Long): PostResponse = PostResponse(
             id = post.id,
             userId = post.user.id,
-            authorNickname = post.user.nickname,
-            authorProfileImageUrl = post.user.profileImageUrl,
+            userNickname = post.user.nickname,
+            userProfileImageUrl = post.user.profileImageUrl,
             title = post.title,
             description = post.description,
             mediaType = post.mediaType,
@@ -68,7 +69,8 @@ data class PostResponse(
             viewCount = post.viewCount,
             createdAt = post.createdAt,
             isMine = post.user.id == currentUserId,
-            isHidden = post.isHidden
+            isHidden = post.isHidden,
+            isUserDeleted = (post.user.status == UserStatus.DELETED)
         )
     }
 }
