@@ -1,7 +1,6 @@
 package com.example.backend.auth.controller
 
 import com.example.backend.auth.BlockedUserResponse
-import com.example.backend.auth.PostResponse
 import com.example.backend.auth.UpdateNicknameRequest
 import com.example.backend.auth.service.UserService
 import com.example.backend.common.CurrentUserId

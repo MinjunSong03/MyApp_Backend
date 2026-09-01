@@ -28,3 +28,8 @@ spring:
 
 jwt:
   access-token-expiration-ms: 86400000
+
+cloudflare:
+  r2:
+    bucket-name: "my-app"
+    public-base-url: "https://pub-e8e8e80b8f704c9d88967085b54d6936.r2.dev"

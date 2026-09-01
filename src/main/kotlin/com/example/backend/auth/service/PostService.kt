@@ -25,7 +25,8 @@ class PostService (
     private val userRepository: UserRepository,
     private val userBlockRepository: UserBlockRepository,
     private val reportRepository: ReportRepository,
-    private val userHiddenPostRepository: UserHiddenPostRepository
+    private val userHiddenPostRepository: UserHiddenPostRepository,
+    private val mediaService: MediaService
 ) {
     @Transactional
     fun createPost(userId: Long, request: CreatePostRequest): PostResponse {
@@ -113,7 +114,19 @@ class PostService (
 
         require(post.user.id == userId) { "게시글 삭제 권한이 없습니다." }
 
-        post.status = PostStatus.DELETED
+        if (post.status == PostStatus.BLINDED) {
+            throw IllegalArgumentException("신고로 인해 검토중인 게시글입니다.")
+        }
+
+        mediaService.deleteMediaFromR2(post.mediaUrl)
+        if (post.thumbnailUrl.isNotBlank() && post.thumbnailUrl != post.mediaUrl) {
+            mediaService.deleteMediaFromR2(post.thumbnailUrl)
+        }
+
+        userHiddenPostRepository.deleteAllByPostId(postId)
+        reportRepository.deleteAllByPostId(postId)
+
+        postRepository.delete(post)
     }
 
     @Transactional

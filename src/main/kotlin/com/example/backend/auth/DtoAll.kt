@@ -95,3 +95,26 @@ data class BlockedUserResponse(
         )
     }
 }
+
+data class ImagePresignedRequest(
+    val fileName: String,
+    val contentType: String
+)
+
+data class VideoPresignedRequest(
+    val videoFileName: String,
+    val videoContentType: String,
+    val thumbFileName: String,
+    val thumbContentType: String
+)
+
+data class PresignedUrlResponse(
+    val uploadUrl: String,
+    val fileUrl: String,
+    val key: String
+)
+
+data class VideoPresignedUrlResponse(
+    val video: PresignedUrlResponse,
+    val thumbnail: PresignedUrlResponse
+)

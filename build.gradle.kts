@@ -37,7 +37,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	implementation("org.springframework.security:spring-security-crypto")
-
+	implementation("software.amazon.awssdk:s3:2.25.40")
 }
 
 kotlin {

@@ -14,4 +14,6 @@ interface ReportRepository: JpaRepository<Report, Long> {
         status: ReportStatus,
         pageable: Pageable
     ): Page<Report>
+
+    fun deleteAllByPostId(postId: Long)
 }

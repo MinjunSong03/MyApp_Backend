@@ -1,7 +1,6 @@
 package com.example.backend.auth.service
 
 import com.example.backend.auth.BlockedUserResponse
-import com.example.backend.auth.PostResponse
 import com.example.backend.user.UserRepository
 import com.example.backend.userblock.UserBlock
 import com.example.backend.userblock.UserBlockRepository
