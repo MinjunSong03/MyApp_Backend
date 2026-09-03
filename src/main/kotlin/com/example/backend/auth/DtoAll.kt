@@ -26,17 +26,17 @@ data class AuthResponse(
 data class CreatePostRequest(
     val title: String,
     val description: String,
-    val mediaType: MediaType,
-    val thumbnailUrl: String,
-    val mediaUrl: String
+    val videoUrl: String? = null,
+    val videoThumbnailUrl: String? = null,
+    val imageUrls: List<String> = emptyList()
 )
 
 data class EditPostRequest(
     val title: String,
     val description: String,
-    val mediaType: MediaType,
-    val thumbnailUrl: String,
-    val mediaUrl: String
+    val videoUrl: String? = null,
+    val videoThumbnailUrl: String? = null,
+    val imageUrls: List<String> = emptyList()
 )
 
 data class PostResponse(
@@ -46,9 +46,9 @@ data class PostResponse(
     val userProfileImageUrl: String?,
     val title: String,
     val description: String,
-    val mediaType: MediaType,
-    val thumbnailUrl: String,
-    val mediaUrl: String,
+    val videoUrl: String?,
+    val videoThumbnailUrl: String?,
+    val imageUrls: List<String>,
     val viewCount: Long,
     val createdAt: LocalDateTime,
     val isMine: Boolean,
@@ -63,9 +63,9 @@ data class PostResponse(
             userProfileImageUrl = post.user.profileImageUrl,
             title = post.title,
             description = post.description,
-            mediaType = post.mediaType,
-            thumbnailUrl = post.thumbnailUrl,
-            mediaUrl = post.mediaUrl,
+            videoUrl = post.videoUrl,
+            videoThumbnailUrl = post.videoThumbnailUrl,
+            imageUrls = post.imageUrls.toList(),
             viewCount = post.viewCount,
             createdAt = post.createdAt,
             isMine = post.user.id == currentUserId,

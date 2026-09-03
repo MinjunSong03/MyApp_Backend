@@ -2,6 +2,7 @@ package com.example.backend.post
 
 import com.example.backend.user.User
 import jakarta.persistence.*
+import org.hibernate.annotations.BatchSize
 import java.time.LocalDateTime
 
 enum class MediaType { IMAGE, VIDEO }
@@ -27,15 +28,17 @@ class Post(
     @Column(nullable = false, columnDefinition = "TEXT")
     var description: String = "",
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var mediaType: MediaType = MediaType.IMAGE,
+    @Column(nullable = true)
+    var videoUrl: String? = null,
 
-    @Column(nullable = false)
-    var thumbnailUrl: String = "",
+    @Column(nullable = true)
+    var videoThumbnailUrl: String? = null,
 
-    @Column(nullable = false)
-    var mediaUrl: String = "",
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "post_images", joinColumns = [JoinColumn(name = "post_id")])
+    @Column(name = "image_url")
+    @BatchSize(size = 50)
+    var imageUrls: MutableList<String> = mutableListOf(),
 
     @Column(nullable = false)
     var isHidden: Boolean = false,
@@ -55,12 +58,19 @@ class Post(
 
     var updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
-    fun edit(title: String, description: String, mediaType: MediaType, thumbnailUrl: String, mediaUrl: String) {
+    fun edit(
+        title: String,
+        description: String,
+        videoUrl: String?,
+        videoThumbnailUrl: String?,
+        imageUrls: List<String>
+    ) {
         this.title = title
         this.description = description
-        this.mediaType = mediaType
-        this.thumbnailUrl = thumbnailUrl
-        this.mediaUrl = mediaUrl
+        this.videoUrl = videoUrl
+        this.videoThumbnailUrl = videoThumbnailUrl
+        this.imageUrls.clear()
+        this.imageUrls.addAll(imageUrls)
         this.updatedAt = LocalDateTime.now()
     }
 

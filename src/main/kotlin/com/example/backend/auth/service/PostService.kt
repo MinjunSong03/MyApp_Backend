@@ -37,9 +37,9 @@ class PostService (
             user = user,
             title = request.title,
             description = request.description,
-            mediaType = request.mediaType,
-            thumbnailUrl = request.thumbnailUrl,
-            mediaUrl = request.mediaUrl
+            videoUrl = request.videoUrl,
+            videoThumbnailUrl = request.videoThumbnailUrl,
+            imageUrls = request.imageUrls.toMutableList()
         )
         return PostResponse.from(postRepository.save(post), userId)
     }
@@ -103,7 +103,13 @@ class PostService (
 
         require(post.user.id == userId) { "게시글 수정 권한이 없습니다." }
 
-        post.edit(request.title, request.description, request.mediaType, request.thumbnailUrl, request.mediaUrl)
+        post.edit(
+            title = request.title,
+            description = request.description,
+            videoUrl = request.videoUrl,
+            videoThumbnailUrl = request.videoThumbnailUrl,
+            imageUrls = request.imageUrls
+            )
         return PostResponse.from(post, userId)
     }
 
@@ -118,9 +124,12 @@ class PostService (
             throw IllegalArgumentException("신고로 인해 검토중인 게시글입니다.")
         }
 
-        mediaService.deleteMediaFromR2(post.mediaUrl)
-        if (post.thumbnailUrl.isNotBlank() && post.thumbnailUrl != post.mediaUrl) {
-            mediaService.deleteMediaFromR2(post.thumbnailUrl)
+        post.videoUrl?.let { mediaService.deleteMediaFromR2(it) }
+        post.videoThumbnailUrl?.let { thumb ->
+            if (thumb != post.videoUrl) mediaService.deleteMediaFromR2(thumb)
+        }
+        post.imageUrls.forEach { imageUrl ->
+            mediaService.deleteMediaFromR2(imageUrl)
         }
 
         userHiddenPostRepository.deleteAllByPostId(postId)
