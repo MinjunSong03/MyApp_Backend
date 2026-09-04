@@ -1,7 +1,7 @@
 package com.example.backend.auth.controller
 
 import com.example.backend.auth.BlockedUserResponse
-import com.example.backend.auth.UpdateNicknameRequest
+import com.example.backend.auth.UpdateProfileRequest
 import com.example.backend.auth.service.UserService
 import com.example.backend.common.CurrentUserId
 import org.springframework.data.domain.Pageable
@@ -24,13 +24,18 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(
     private val userService: UserService
 ) {
-    @PatchMapping("/updateNickname")
+    @PatchMapping("/update_profile")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun updateNickname(
+    fun updateProfile(
         @CurrentUserId userId: Long,
-        @RequestBody request: UpdateNicknameRequest
+        @RequestBody request: UpdateProfileRequest
     ) {
-        userService.updateNickname(userId, request.nickname)
+        userService.updateProfile(
+            userId = userId,
+            newNickname = request.nickname,
+            profileImageUrl = request.profileImageUrl,
+            deleteProfileImage = request.deleteProfileImage
+        )
     }
 
     @PostMapping("/{targetUserId}/block")

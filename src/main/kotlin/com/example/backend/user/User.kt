@@ -39,9 +39,15 @@ class User (
         private val RESERVED_NICKNAMES = setOf("탈퇴한 사용자", "알 수 없음", "관리자", "admin")
     }
 
-    fun updateNickname(newNickname: String) {
+    fun updateProfile(newNickname: String, newProfileImageUrl: String?, deleteProfileImage: Boolean) {
         require(newNickname !in RESERVED_NICKNAMES) { "사용할 수 없는 닉네임입니다." }
         require(newNickname.length in 2..10) { "닉네임은 2자 이상 10자 이하이어야 합니다." }
+
+        if (deleteProfileImage) {
+            this.profileImageUrl = null
+        } else if (newProfileImageUrl != null) {
+            this.profileImageUrl = newProfileImageUrl
+        }
 
         this.nickname = newNickname
         this.updatedAt = LocalDateTime.now()

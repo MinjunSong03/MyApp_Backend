@@ -2,6 +2,7 @@ package com.example.backend.auth.service
 
 import com.example.backend.auth.BlockedUserResponse
 import com.example.backend.user.UserRepository
+import com.example.backend.user.UserStatus
 import com.example.backend.userblock.UserBlock
 import com.example.backend.userblock.UserBlockRepository
 import org.springframework.data.domain.Pageable
@@ -16,11 +17,21 @@ class UserService(
     private val userBlockRepository: UserBlockRepository
 ) {
    @Transactional
-    fun updateNickname(userId: Long, newNickname: String) {
+    fun updateProfile(userId: Long,
+                      newNickname: String,
+                      profileImageUrl: String?,
+                      deleteProfileImage: Boolean
+    ) {
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid User.")
 
-        user.updateNickname(newNickname)
+       check(user.status == UserStatus.ACTIVE) { "활성화된 사용자만 프로필을 변경할 수 있습니다." }
+
+       user.updateProfile(
+           newNickname = newNickname,
+           newProfileImageUrl = profileImageUrl,
+           deleteProfileImage = deleteProfileImage
+       )
     }
 
     @Transactional

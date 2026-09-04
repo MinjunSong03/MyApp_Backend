@@ -11,8 +11,10 @@ data class OAuthLoginRequest(
     val accessToken: String
 )
 
-data class UpdateNicknameRequest(
-    val nickname: String
+data class UpdateProfileRequest(
+    val nickname: String,
+    val profileImageUrl: String? = null,
+    val deleteProfileImage: Boolean = false
 )
 
 data class AuthResponse(
