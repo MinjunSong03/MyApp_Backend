@@ -90,9 +90,6 @@ class PostService (
 
     @Transactional(readOnly = true)
     fun getPostDetail(userId: Long, postId: Long): PostResponse {
-        val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid user")
-
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("Invalid post")
 
@@ -100,12 +97,12 @@ class PostService (
             throw IllegalStateException("삭제되었거나 블라인드 처리된 게시글입니다.")
         }
 
-        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId = user.id, blockedId = post.user.id)) {
+        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId = userId, blockedId = post.user.id)) {
             throw IllegalStateException("차단한 사용자의 게시글은 열람할 수 없습니다.")
         }
 
         post.incrementViewCount()
-        return PostResponse.from(post, user.id)
+        return PostResponse.from(post, userId)
     }
 
     @Transactional
