@@ -7,6 +7,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3Configuration
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import java.net.URI
 
@@ -21,6 +22,11 @@ class R2Config(
     @Value("\${cloudflare.r2.secret-access-key}")
     private val secretAccessKey: String
 ) {
+    private val s3Configuration: S3Configuration = S3Configuration.builder()
+        .pathStyleAccessEnabled(true)
+        .chunkedEncodingEnabled(false)
+        .build()
+
     @Bean
     fun s3Presigner(): S3Presigner {
         val credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey)
@@ -29,6 +35,7 @@ class R2Config(
         return S3Presigner.builder()
             .region(Region.of("auto"))
             .endpointOverride(endpoint)
+            .serviceConfiguration(s3Configuration)
             .credentialsProvider(StaticCredentialsProvider.create(credentials))
             .build()
     }
@@ -39,8 +46,9 @@ class R2Config(
         val endpoint = URI.create("https://$accountId.r2.cloudflarestorage.com")
 
         return S3Client.builder()
-            .region(Region.US_EAST_1)
+            .region(Region.of("auto"))
             .endpointOverride(endpoint)
+            .serviceConfiguration(s3Configuration)
             .credentialsProvider(StaticCredentialsProvider.create(credentials))
             .build()
     }

@@ -7,7 +7,10 @@ import com.example.backend.auth.VideoPresignedUrlResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.Delete
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest
@@ -72,19 +75,24 @@ class MediaService(
         )
     }
 
-    fun deleteMediaFromR2(fileUrl: String) {
-        if (fileUrl.isBlank() || !fileUrl.startsWith(publicBaseUrl)) return
+    fun deleteMediaFromR2(fileUrls: List<String?>) {
+        val keysToDelete = fileUrls
+            .filterNotNull()
+            .filter { it.isNotBlank() && it.startsWith(publicBaseUrl) }
+            .map { it.removePrefix(publicBaseUrl).trimStart('/') }
+            .map { ObjectIdentifier.builder().key(it).build() }
 
-        val key = fileUrl.removePrefix(publicBaseUrl).trimStart('/')
-        val deleteRequest = DeleteObjectRequest.builder()
+        if (keysToDelete.isEmpty()) return
+
+        val deleteRequest = DeleteObjectsRequest.builder()
             .bucket(bucketName)
-            .key(key)
+            .delete(Delete.builder().objects(keysToDelete).build())
             .build()
 
         runCatching {
-            s3Client.deleteObject(deleteRequest)
+            s3Client.deleteObjects(deleteRequest)
         }.onFailure {
-            System.err.println("R2 파일 삭제 실패: $key (${it.message})")
+            System.err.println("R2 다중 파일 삭제 실패: ${it.message}")
         }
     }
 }

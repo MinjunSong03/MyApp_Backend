@@ -14,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val userBlockRepository: UserBlockRepository
+    private val userBlockRepository: UserBlockRepository,
+    private val mediaService: MediaService
 ) {
    @Transactional
     fun updateProfile(userId: Long,
@@ -23,9 +24,11 @@ class UserService(
                       deleteProfileImage: Boolean
     ) {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid User.")
+            ?: throw IllegalArgumentException("Invalid User")
 
        check(user.status == UserStatus.ACTIVE) { "활성화된 사용자만 프로필을 변경할 수 있습니다." }
+
+       mediaService.deleteMediaFromR2(listOf(user.profileImageUrl))
 
        user.updateProfile(
            newNickname = newNickname,
@@ -43,7 +46,7 @@ class UserService(
         }
 
         val blocker = userRepository.findByIdOrNull(blockerId)
-            ?: throw IllegalArgumentException("차단을 요청한 유저를 찾을 수 없습니다.")
+            ?: throw IllegalArgumentException("Invalid User")
 
         val blocked = userRepository.findByIdOrNull(blockedId)
             ?: throw IllegalArgumentException("차단 대상 유저를 찾을 수 없습니다.")
@@ -60,7 +63,7 @@ class UserService(
     @Transactional(readOnly = true)
     fun getMyBlockedUser(userId: Long, pageable: Pageable): Slice<BlockedUserResponse> {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid User.")
+            ?: throw IllegalArgumentException("Invalid User")
 
         require(user.id == userId) { "본인 인증에 실패했습니다." }
 

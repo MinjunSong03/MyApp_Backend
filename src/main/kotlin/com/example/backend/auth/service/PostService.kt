@@ -31,7 +31,7 @@ class PostService (
     @Transactional
     fun createPost(userId: Long, request: CreatePostRequest): PostResponse {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid user.")
+            ?: throw IllegalArgumentException("Invalid user")
 
         val post = Post(
             user = user,
@@ -46,41 +46,53 @@ class PostService (
 
     @Transactional(readOnly = true)
     fun getHomeFeed(userId: Long, pageable: Pageable): Slice<PostResponse> {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
 
         val posts = postRepository.findFilteredFeed(PostStatus.ACTIVE, userId, pageable)
 
-        return posts.map { PostResponse.from(post = it, currentUserId = userId) }
+        return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
     }
 
     @Transactional(readOnly = true)
     fun getMyActPost(userId: Long, pageable: Pageable): Slice<PostResponse> {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
         val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalse(PostStatus.ACTIVE, userId, pageable)
 
-        return posts.map { PostResponse.from(post = it, currentUserId = userId) }
+        return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
     }
 
     @Transactional(readOnly = true)
     fun getMyHiddenPost(userId: Long, pageable: Pageable): Slice<PostResponse> {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
         val posts = postRepository.findByStatusAndUserIdAndIsHiddenTrue(PostStatus.ACTIVE, userId, pageable)
 
-        return posts.map { PostResponse.from(post = it, currentUserId = userId) }
+        return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
     }
 
     @Transactional(readOnly = true)
     fun getPostById(userId: Long, postId: Long): PostResponse {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid user.")
+            ?: throw IllegalArgumentException("Invalid user")
 
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
 
         require(post.user.id == user.id) { "나의 게시물이 아닙니다." }
 
-        return PostResponse.from(post = post, currentUserId = userId)
+        return PostResponse.from(post = post, currentUserId = user.id)
     }
 
     @Transactional(readOnly = true)
     fun getPostDetail(userId: Long, postId: Long): PostResponse {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("Invalid post")
 
@@ -88,20 +100,23 @@ class PostService (
             throw IllegalStateException("삭제되었거나 블라인드 처리된 게시글입니다.")
         }
 
-        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId = userId, blockedId = post.user.id)) {
+        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId = user.id, blockedId = post.user.id)) {
             throw IllegalStateException("차단한 사용자의 게시글은 열람할 수 없습니다.")
         }
 
         post.incrementViewCount()
-        return PostResponse.from(post, userId)
+        return PostResponse.from(post, user.id)
     }
 
     @Transactional
     fun editPost(userId: Long, postId: Long, request: EditPostRequest): PostResponse {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
 
-        require(post.user.id == userId) { "게시글 수정 권한이 없습니다." }
+        require(post.user.id == user.id) { "게시글 수정 권한이 없습니다." }
 
         post.edit(
             title = request.title,
@@ -110,27 +125,26 @@ class PostService (
             videoThumbnailUrl = request.videoThumbnailUrl,
             imageUrls = request.imageUrls
             )
-        return PostResponse.from(post, userId)
+        return PostResponse.from(post, user.id)
     }
 
     @Transactional
     fun deletePost(userId: Long, postId: Long) {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
 
-        require(post.user.id == userId) { "게시글 삭제 권한이 없습니다." }
+        require(post.user.id == user.id) { "게시글 삭제 권한이 없습니다." }
 
         if (post.status == PostStatus.BLINDED) {
             throw IllegalArgumentException("신고로 인해 검토중인 게시글입니다.")
         }
 
-        post.videoUrl?.let { mediaService.deleteMediaFromR2(it) }
-        post.videoThumbnailUrl?.let { thumb ->
-            if (thumb != post.videoUrl) mediaService.deleteMediaFromR2(thumb)
-        }
-        post.imageUrls.forEach { imageUrl ->
-            mediaService.deleteMediaFromR2(imageUrl)
-        }
+        val mediaUrlsToDelete = (listOf(post.videoUrl, post.videoThumbnailUrl) + post.imageUrls).distinct()
+
+        mediaService.deleteMediaFromR2(mediaUrlsToDelete)
 
         userHiddenPostRepository.deleteAllByPostId(postId)
         reportRepository.deleteAllByPostId(postId)
@@ -142,6 +156,7 @@ class PostService (
     fun reportPost(reporterId: Long, postId: Long, reason: ReportReason, detail: String) {
         val reporter = userRepository.findByIdOrNull(reporterId)
             ?: throw IllegalArgumentException("신고자를 찾을 수 없습니다.")
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
 
@@ -165,7 +180,7 @@ class PostService (
     @Transactional
     fun hidePost(userId: Long, postId: Long) {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid user.")
+            ?: throw IllegalArgumentException("Invalid user")
 
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
@@ -173,7 +188,7 @@ class PostService (
         if (user.id == post.user.id) {
             post.hide()
         } else {
-            if (userHiddenPostRepository.existsByUserIdAndPostId(userId, postId)) {
+            if (userHiddenPostRepository.existsByUserIdAndPostId(user.id, post.id)) {
                 throw IllegalArgumentException("이미 숨김 처리된 게시물입니다.")
             }
 
@@ -185,7 +200,7 @@ class PostService (
     @Transactional
     fun unhidePost(userId: Long, postId: Long) {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid user.")
+            ?: throw IllegalArgumentException("Invalid user")
 
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")

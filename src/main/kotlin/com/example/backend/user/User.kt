@@ -16,6 +16,8 @@ class User (
     @Enumerated(EnumType.STRING)
     var provider: AuthProvider? = AuthProvider.LOCAL,
 
+    var refreshToken: String? = null,
+
     @Column(unique = true)
     var oauthId: String? = null,
 
@@ -67,4 +69,8 @@ class User (
         this.updatedAt = LocalDateTime.now()
         this.deletedAt = LocalDateTime.now()
     }
+    fun updateRefreshToken(token: String) {
+        this.refreshToken = token
+    }
+
 }

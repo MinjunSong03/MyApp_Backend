@@ -19,10 +19,20 @@ data class UpdateProfileRequest(
 
 data class AuthResponse(
     val token: String,
+    val refreshToken: String,
     val userId: Long,
     val nickname: String,
     val profileImageUrl: String?,
     val isNewUser: Boolean
+)
+
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
+data class TokenRefreshResponse(
+    val accessToken: String,
+    val refreshToken: String
 )
 
 data class CreatePostRequest(

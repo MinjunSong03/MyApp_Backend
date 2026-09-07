@@ -15,7 +15,10 @@ class JwtTokenProvider(
     private val secretKey: String,
 
     @Value("\${jwt.access-token-expiration-ms}")
-    private val validityInMs: Long
+    private val validityInMs: Long,
+
+    @Value("\${jwt.refresh-token-expiration-ms}")
+    private val refreshValidityInMs: Long
 ) {
     private val key = Keys.hmacShaKeyFor(secretKey.toByteArray(StandardCharsets.UTF_8))
 
@@ -25,6 +28,19 @@ class JwtTokenProvider(
 
         return Jwts.builder()
             .subject(userId.toString())
+            .issuedAt(now)
+            .expiration(validity)
+            .signWith(key)
+            .compact()
+    }
+
+    fun createRefreshToken(userId: Long): String {
+        val now = Date()
+        val validity = Date(now.time + refreshValidityInMs)
+
+        return Jwts.builder()
+            .subject(userId.toString())
+            .claim("type", "refresh")
             .issuedAt(now)
             .expiration(validity)
             .signWith(key)

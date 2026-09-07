@@ -3,6 +3,8 @@ package com.example.backend.auth.controller
 import com.example.backend.auth.AuthResponse
 import com.example.backend.auth.service.AuthService
 import com.example.backend.auth.OAuthLoginRequest
+import com.example.backend.auth.RefreshTokenRequest
+import com.example.backend.auth.TokenRefreshResponse
 import com.example.backend.common.CurrentUserId
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
@@ -25,5 +27,10 @@ class AuthController(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unlinkKakaoAccount(@CurrentUserId userId: Long) {
         authService.unlinkFromKakao(userId)
+    }
+
+    @PostMapping("/refresh")
+    fun refreshToken(@RequestBody request: RefreshTokenRequest): TokenRefreshResponse {
+        return authService.refreshToken(request.refreshToken)
     }
 }
