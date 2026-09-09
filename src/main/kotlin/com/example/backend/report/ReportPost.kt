@@ -24,7 +24,7 @@ enum class ReportReason {
     uniqueConstraints = [
         UniqueConstraint(name = "uk_reporter_post", columnNames = ["reporter_id", "post_id"])
     ])
-class Report (
+class ReportPost (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,

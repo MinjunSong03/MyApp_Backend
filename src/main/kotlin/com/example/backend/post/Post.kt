@@ -81,10 +81,6 @@ class Post(
         }
     }
 
-    fun incrementViewCount() {
-        this.viewCount += 1
-    }
-
     fun hide() {
         this.isHidden = true
         this.updatedAt = LocalDateTime.now()

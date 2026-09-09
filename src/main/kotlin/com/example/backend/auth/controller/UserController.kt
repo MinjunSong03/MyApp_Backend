@@ -2,6 +2,7 @@ package com.example.backend.auth.controller
 
 import com.example.backend.auth.BlockedUserResponse
 import com.example.backend.auth.UpdateProfileRequest
+import com.example.backend.auth.UserProfileResponse
 import com.example.backend.auth.service.UserService
 import com.example.backend.common.CurrentUserId
 import org.springframework.data.domain.Pageable
@@ -65,5 +66,13 @@ class UserController(
                       ) pageable: Pageable
     ): Slice<BlockedUserResponse> {
         return userService.getMyBlockedUser(userId, pageable)
+    }
+
+    @GetMapping("/{targetUserId}")
+    fun getUserProfile(
+        @CurrentUserId currentUserId: Long,
+        @PathVariable targetUserId: Long
+    ): UserProfileResponse {
+        return userService.getUserProfile(currentUserId = currentUserId, targetUserId = targetUserId)
     }
 }

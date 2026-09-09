@@ -131,4 +131,17 @@ class PostController(
     ) {
         postService.reportPost(reporterId = userId, postId = postId, reason = request.reason, detail = request.detail)
     }
+
+    @GetMapping("/user/{targetUserId}")
+    fun getUserPosts(
+        @CurrentUserId currentUserId: Long,
+        @PathVariable targetUserId: Long,
+        @PageableDefault(
+            size = 10,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
+    ): Slice<PostResponse> {
+        return postService.getUserPosts(currentUserId = currentUserId, targetUserId = targetUserId, pageable = pageable)
+    }
 }

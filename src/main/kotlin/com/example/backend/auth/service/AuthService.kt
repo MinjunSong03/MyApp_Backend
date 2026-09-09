@@ -55,7 +55,7 @@ class AuthService(
     @Transactional
     fun unlinkFromKakao(userId: Long) {
         val user = userRepository.findByIdOrNull(userId)
-            ?: throw IllegalArgumentException("Invalid User")
+            ?: throw IllegalArgumentException("Invalid user")
 
         user.oauthId?.let { kakaoClient.unlink(it) }
 

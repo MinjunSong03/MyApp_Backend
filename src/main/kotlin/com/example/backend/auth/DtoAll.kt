@@ -11,6 +11,14 @@ data class OAuthLoginRequest(
     val accessToken: String
 )
 
+data class UserProfileResponse(
+    val id: Long,
+    val nickname: String,
+    val profileImageUrl: String? = null,
+    val isDeleted: Boolean = false,
+    val isMine: Boolean = false
+)
+
 data class UpdateProfileRequest(
     val nickname: String,
     val profileImageUrl: String? = null,

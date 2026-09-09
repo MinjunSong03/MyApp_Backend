@@ -4,7 +4,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface ReportRepository: JpaRepository<Report, Long> {
+interface ReportPostRepository: JpaRepository<ReportPost, Long> {
 
     fun existsByReporterIdAndPostId(reporterId: Long, postId: Long): Boolean
 
@@ -13,7 +13,7 @@ interface ReportRepository: JpaRepository<Report, Long> {
     fun findByStatusOrderByCreatedAtAsc(
         status: ReportStatus,
         pageable: Pageable
-    ): Page<Report>
+    ): Page<ReportPost>
 
     fun deleteAllByPostId(postId: Long)
 }

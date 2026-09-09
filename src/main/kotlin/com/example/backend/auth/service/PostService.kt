@@ -6,9 +6,9 @@ import com.example.backend.auth.PostResponse
 import com.example.backend.post.Post
 import com.example.backend.post.PostRepository
 import com.example.backend.post.PostStatus
-import com.example.backend.report.Report
+import com.example.backend.report.ReportPost
 import com.example.backend.report.ReportReason
-import com.example.backend.report.ReportRepository
+import com.example.backend.report.ReportPostRepository
 import com.example.backend.user.UserRepository
 import com.example.backend.userHiddenPost.UserHiddenPostRepository
 import com.example.backend.userblock.UserBlockRepository
@@ -24,7 +24,7 @@ class PostService (
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
     private val userBlockRepository: UserBlockRepository,
-    private val reportRepository: ReportRepository,
+    private val reportRepository: ReportPostRepository,
     private val userHiddenPostRepository: UserHiddenPostRepository,
     private val mediaService: MediaService
 ) {
@@ -88,7 +88,7 @@ class PostService (
         return PostResponse.from(post = post, currentUserId = user.id)
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     fun getPostDetail(userId: Long, postId: Long): PostResponse {
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("Invalid post")
@@ -101,7 +101,7 @@ class PostService (
             throw IllegalStateException("차단한 사용자의 게시글은 열람할 수 없습니다.")
         }
 
-        post.incrementViewCount()
+        postRepository.incrementViewCount(postId)
         return PostResponse.from(post, userId)
     }
 
@@ -163,7 +163,7 @@ class PostService (
             throw IllegalStateException("이미 신고한 게시글입니다.")
         }
 
-        val report = Report(
+        val report = ReportPost(
             reporter = reporter,
             post = post,
             reason = reason,
@@ -207,6 +207,24 @@ class PostService (
     } else {
             throw IllegalArgumentException("본인의 게시물만 숨김 해제 가능합니다.")
         }
+    }
+
+    @Transactional(readOnly = true)
+    fun getUserPosts(currentUserId: Long, targetUserId: Long, pageable: Pageable): Slice<PostResponse> {
+        val targetUser = userRepository.findByIdOrNull(targetUserId)
+            ?: throw IllegalArgumentException("존재하지 않는 사용자입니다.")
+
+        if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId = currentUserId, blockedId = targetUserId)) {
+            throw IllegalStateException("차단한 사용자의 게시물은 열람할 수 없습니다.")
+        }
+
+        val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalse(
+            status = PostStatus.ACTIVE,
+            userId = targetUser.id,
+            pageable = pageable
+        )
+
+        return posts.map { PostResponse.from(post = it, currentUserId = currentUserId) }
     }
 }
 
