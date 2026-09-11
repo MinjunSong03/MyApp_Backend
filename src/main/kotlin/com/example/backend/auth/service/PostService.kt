@@ -3,6 +3,7 @@ package com.example.backend.auth.service
 import com.example.backend.auth.CreatePostRequest
 import com.example.backend.auth.EditPostRequest
 import com.example.backend.auth.PostResponse
+import com.example.backend.comment.CommentRepository
 import com.example.backend.post.Post
 import com.example.backend.post.PostRepository
 import com.example.backend.post.PostStatus
@@ -25,6 +26,7 @@ class PostService (
     private val userRepository: UserRepository,
     private val userBlockRepository: UserBlockRepository,
     private val reportRepository: ReportPostRepository,
+    private val commentRepository: CommentRepository,
     private val userHiddenPostRepository: UserHiddenPostRepository,
     private val mediaService: MediaService
 ) {
@@ -142,6 +144,8 @@ class PostService (
         val mediaUrlsToDelete = (listOf(post.videoUrl, post.videoThumbnailUrl) + post.imageUrls).distinct()
 
         mediaService.deleteMediaFromR2(mediaUrlsToDelete)
+
+        commentRepository.deleteAllByPostId(postId)
 
         userHiddenPostRepository.deleteAllByPostId(postId)
         reportRepository.deleteAllByPostId(postId)

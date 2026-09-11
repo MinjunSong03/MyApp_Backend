@@ -1,6 +1,7 @@
 package com.example.backend.auth.controller
 
 import com.example.backend.auth.BlockedUserResponse
+import com.example.backend.auth.CreateReportRequest
 import com.example.backend.auth.UpdateProfileRequest
 import com.example.backend.auth.UserProfileResponse
 import com.example.backend.auth.service.UserService
@@ -58,12 +59,13 @@ class UserController(
     }
 
     @GetMapping("/my_blocked_user")
-    fun getMyBlockedUser(@CurrentUserId userId: Long,
-                      @PageableDefault(
-                          size = 10,
-                          sort = ["createdAt"],
-                          direction = Sort.Direction.DESC
-                      ) pageable: Pageable
+    fun getMyBlockedUser(
+        @CurrentUserId userId: Long,
+        @PageableDefault(
+            size = 10,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
     ): Slice<BlockedUserResponse> {
         return userService.getMyBlockedUser(userId, pageable)
     }
@@ -74,5 +76,20 @@ class UserController(
         @PathVariable targetUserId: Long
     ): UserProfileResponse {
         return userService.getUserProfile(currentUserId = currentUserId, targetUserId = targetUserId)
+    }
+
+    @PostMapping("/{targetId}/reports")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun reportPost(
+        @CurrentUserId userId: Long,
+        @PathVariable targetId: Long,
+        @RequestBody request: CreateReportRequest
+    ) {
+        userService.reportUser(
+            reporterId = userId,
+            targetId = targetId,
+            reason = request.reason,
+            detail = request.detail
+        )
     }
 }

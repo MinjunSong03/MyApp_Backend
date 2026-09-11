@@ -25,6 +25,9 @@ class User (
 
     var profileImageUrl: String? = null,
 
+    @Column(nullable = false)
+    var reportCount: Int = 0,
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: UserStatus = UserStatus.ACTIVE,
@@ -58,6 +61,14 @@ class User (
     fun ban() {
         this.status = UserStatus.BANNED
         this.updatedAt = LocalDateTime.now()
+    }
+
+    fun incrementReportCount() {
+        this.reportCount += 1
+        if (this.reportCount >= 5) {
+            this.status = UserStatus.BANNED
+            this.updatedAt = LocalDateTime.now()
+        }
     }
 
     fun withdraw() {

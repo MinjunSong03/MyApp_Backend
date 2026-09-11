@@ -1,33 +1,21 @@
 package com.example.backend.report
 
-import com.example.backend.post.Post
+import com.example.backend.comment.Comment
 import com.example.backend.user.User
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
-enum class ReportStatus {
-    PENDING,
-    ACCEPTED,
-    REJECTED
-}
-
-enum class ReportReason {
-    SPAM,
-    INAPPROPRIATE,
-    VIOLENCE,
-    COPYRIGHT,
-    OTHER
-}
-
 @Entity
-@Table(name = "report_posts",
+@Table(
+    name = "report_comments",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_reporter_post",
-            columnNames = ["reporter_id", "post_id"]
+            name = "uk_reporter_comment",
+            columnNames = ["reporter_id", "comment_id"]
         )
-    ])
-class ReportPost (
+    ]
+)
+class ReportComment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -37,8 +25,8 @@ class ReportPost (
     val reporter: User,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    val post: Post,
+    @JoinColumn(name = "comment_id", nullable = false)
+    val comment: Comment,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -1,5 +1,6 @@
 package com.example.backend.auth
 
+import com.example.backend.comment.Comment
 import com.example.backend.post.MediaType
 import com.example.backend.post.Post
 import com.example.backend.report.ReportReason
@@ -71,6 +72,7 @@ data class PostResponse(
     val imageUrls: List<String>,
     val viewCount: Long,
     val createdAt: LocalDateTime,
+    val editedAt: LocalDateTime?,
     val isMine: Boolean,
     val isHidden: Boolean,
     val isUserDeleted: Boolean
@@ -88,9 +90,47 @@ data class PostResponse(
             imageUrls = post.imageUrls.toList(),
             viewCount = post.viewCount,
             createdAt = post.createdAt,
+            editedAt = post.editedAt,
             isMine = post.user.id == currentUserId,
             isHidden = post.isHidden,
             isUserDeleted = (post.user.status == UserStatus.DELETED)
+        )
+    }
+}
+
+data class CreateCommentRequest(
+    val postId: Long,
+    val content: String
+)
+
+data class EditCommentRequest(
+    val content: String
+)
+
+data class CommentResponse(
+    val id: Long,
+    val postId: Long,
+    val userId: Long,
+    val userNickname: String,
+    val userProfileImageUrl: String?,
+    val content: String,
+    val createdAt: LocalDateTime,
+    val editedAt: LocalDateTime?,
+    val isMine: Boolean,
+    val isUserDeleted: Boolean
+) {
+    companion object {
+        fun from(comment: Comment, currentUserId: Long): CommentResponse = CommentResponse(
+            id = comment.id,
+            postId = comment.post.id,
+            userId = comment.user.id,
+            userNickname = comment.user.nickname,
+            userProfileImageUrl = comment.user.profileImageUrl,
+            content = comment.content,
+            createdAt = comment.createdAt,
+            editedAt = comment.editedAt,
+            isMine = comment.user.id == currentUserId,
+            isUserDeleted = (comment.user.status == UserStatus.DELETED)
         )
     }
 }

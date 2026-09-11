@@ -9,9 +9,17 @@ enum class MediaType { IMAGE, VIDEO }
 enum class PostStatus { ACTIVE, BLINDED, DELETED }
 
 @Entity
-@Table(name = "posts",
+@Table(
+    name = "posts",
     indexes = [
-        Index(name = "idx_posts_status_created", columnList = "status, createdAt DESC")
+        Index(
+            name = "idx_posts_status_created",
+            columnList = "status, createdAt DESC"
+        ),
+        Index(
+            name = "idx_posts_user_hidden",
+            columnList = "user_id, hiddenAt DESC"
+        )
     ])
 class Post(
     @Id
@@ -53,9 +61,17 @@ class Post(
     @Column(nullable = false)
     var reportCount: Int = 0,
 
+    // first created time.
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
+    // latest edited time.
+    var editedAt: LocalDateTime? = null,
+
+    // latest hidden time.
+    var hiddenAt: LocalDateTime? = null,
+
+    // latest update time.
     var updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
     fun edit(
@@ -71,6 +87,7 @@ class Post(
         this.videoThumbnailUrl = videoThumbnailUrl
         this.imageUrls.clear()
         this.imageUrls.addAll(imageUrls)
+        this.editedAt = LocalDateTime.now()
         this.updatedAt = LocalDateTime.now()
     }
 
@@ -83,11 +100,13 @@ class Post(
 
     fun hide() {
         this.isHidden = true
+        this.hiddenAt = LocalDateTime.now()
         this.updatedAt = LocalDateTime.now()
     }
 
     fun unhide() {
         this.isHidden = false
+        this.hiddenAt = null
         this.updatedAt = LocalDateTime.now()
     }
 }

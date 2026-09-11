@@ -1,33 +1,31 @@
 package com.example.backend.report
 
-import com.example.backend.post.Post
 import com.example.backend.user.User
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import java.time.LocalDateTime
 
-enum class ReportStatus {
-    PENDING,
-    ACCEPTED,
-    REJECTED
-}
-
-enum class ReportReason {
-    SPAM,
-    INAPPROPRIATE,
-    VIOLENCE,
-    COPYRIGHT,
-    OTHER
-}
-
 @Entity
-@Table(name = "report_posts",
+@Table(
+    name = "report_users",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_reporter_post",
-            columnNames = ["reporter_id", "post_id"]
+            name = "uk_reporter_user",
+            columnNames = ["reporter_id", "reported_id"]
         )
-    ])
-class ReportPost (
+    ]
+)
+class ReportUser(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
@@ -37,8 +35,8 @@ class ReportPost (
     val reporter: User,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    val post: Post,
+    @JoinColumn(name = "reported_id", nullable = false)
+    val reported: User,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
