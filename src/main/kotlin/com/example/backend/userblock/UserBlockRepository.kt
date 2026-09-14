@@ -25,6 +25,4 @@ interface UserBlockRepository: JpaRepository<UserBlock, Long> {
     fun deleteByBlockerIdAndBlockedId(blockerId: Long, blockedId: Long)
 
     fun deleteAllByBlockerId(blockerId: Long)
-
-    fun deleteAllByBlockedId(blockedId: Long)
 }

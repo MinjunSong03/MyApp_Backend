@@ -46,7 +46,7 @@ class User (
 
     fun updateProfile(newNickname: String, newProfileImageUrl: String?, deleteProfileImage: Boolean) {
         require(newNickname !in RESERVED_NICKNAMES) { "사용할 수 없는 닉네임입니다." }
-        require(newNickname.length in 2..10) { "닉네임은 2자 이상 10자 이하이어야 합니다." }
+        require(newNickname.length in 2..10) { "닉네임은 2자 이상 10자 이하로 입력해 주세요." }
 
         if (deleteProfileImage) {
             this.profileImageUrl = null

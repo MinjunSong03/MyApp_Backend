@@ -11,6 +11,7 @@ import com.example.backend.report.ReportPost
 import com.example.backend.report.ReportReason
 import com.example.backend.report.ReportPostRepository
 import com.example.backend.user.UserRepository
+import com.example.backend.user.UserStatus
 import com.example.backend.userHiddenPost.UserHiddenPostRepository
 import com.example.backend.userblock.UserBlockRepository
 import org.springframework.data.domain.Pageable
@@ -34,6 +35,8 @@ class PostService (
     fun createPost(userId: Long, request: CreatePostRequest): PostResponse {
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
+
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = Post(
             user = user,
@@ -62,7 +65,7 @@ class PostService (
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
-        val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalse(PostStatus.ACTIVE, userId, pageable)
+        val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalseOrderByCreatedAtDesc(PostStatus.ACTIVE, userId, pageable)
 
         return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
     }
@@ -72,7 +75,7 @@ class PostService (
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
-        val posts = postRepository.findByStatusAndUserIdAndIsHiddenTrue(PostStatus.ACTIVE, userId, pageable)
+        val posts = postRepository.findByStatusAndUserIdAndIsHiddenTrueOrderByCreatedAtDesc(PostStatus.ACTIVE, userId, pageable)
 
         return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
     }
@@ -112,6 +115,8 @@ class PostService (
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
 
@@ -131,6 +136,8 @@ class PostService (
     fun deletePost(userId: Long, postId: Long) {
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
+
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
@@ -158,6 +165,8 @@ class PostService (
         val reporter = userRepository.findByIdOrNull(reporterId)
             ?: throw IllegalArgumentException("신고자를 찾을 수 없습니다.")
 
+        check(reporter.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
 
@@ -183,6 +192,8 @@ class PostService (
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
 
@@ -203,6 +214,8 @@ class PostService (
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
 
@@ -222,7 +235,7 @@ class PostService (
             throw IllegalStateException("차단한 사용자의 게시물은 열람할 수 없습니다.")
         }
 
-        val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalse(
+        val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalseOrderByCreatedAtDesc(
             status = PostStatus.ACTIVE,
             userId = targetUser.id,
             pageable = pageable

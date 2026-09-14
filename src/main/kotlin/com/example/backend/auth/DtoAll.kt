@@ -6,6 +6,8 @@ import com.example.backend.post.Post
 import com.example.backend.report.ReportReason
 import com.example.backend.user.User
 import com.example.backend.user.UserStatus
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
 
 data class OAuthLoginRequest(
@@ -21,6 +23,8 @@ data class UserProfileResponse(
 )
 
 data class UpdateProfileRequest(
+    @field:NotBlank(message = "닉네임을 입력해 주세요.")
+    @field:Size(min = 2, max = 10, message = "닉네임은 2자 이상 10자 이하로 입력해 주세요.")
     val nickname: String,
     val profileImageUrl: String? = null,
     val deleteProfileImage: Boolean = false
@@ -45,7 +49,11 @@ data class TokenRefreshResponse(
 )
 
 data class CreatePostRequest(
+    @field:NotBlank(message = "제목을 입력해 주세요.")
+    @field:Size(max = 100, message = "제목은 최대 100자까지 입력 가능합니다.")
     val title: String,
+    @field:NotBlank(message = "내용을 입력해 주세요.")
+    @field:Size(max = 3000, message = "내용은 최대 3,000자까지 입력 가능합니다.")
     val description: String,
     val videoUrl: String? = null,
     val videoThumbnailUrl: String? = null,
@@ -53,7 +61,11 @@ data class CreatePostRequest(
 )
 
 data class EditPostRequest(
+    @field:NotBlank(message = "제목을 입력해 주세요.")
+    @field:Size(max = 100, message = "제목은 최대 100자까지 입력 가능합니다.")
     val title: String,
+    @field:NotBlank(message = "내용을 입력해 주세요.")
+    @field:Size(max = 3000, message = "내용은 최대 3,000자까지 입력 가능합니다.")
     val description: String,
     val videoUrl: String? = null,
     val videoThumbnailUrl: String? = null,
@@ -100,10 +112,14 @@ data class PostResponse(
 
 data class CreateCommentRequest(
     val postId: Long,
+    @field:NotBlank(message = "댓글을 입력해 주세요.")
+    @field:Size(max = 500, message = "댓글은 최대 500자까지 입력 가능합니다.")
     val content: String
 )
 
 data class EditCommentRequest(
+    @field:NotBlank(message = "댓글을 입력해 주세요.")
+    @field:Size(max = 500, message = "댓글은 최대 500자까지 입력 가능합니다.")
     val content: String
 )
 
@@ -137,6 +153,7 @@ data class CommentResponse(
 
 data class CreateReportRequest(
     val reason: ReportReason,
+    @field:Size(max = 500, message = "신고 상세 사유는 최대 500자까지 입력 가능합니다.")
     val detail: String
 )
 

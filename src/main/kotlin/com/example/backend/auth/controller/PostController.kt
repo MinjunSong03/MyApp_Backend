@@ -71,6 +71,7 @@ class PostController(
         return postService.getMyHiddenPost(userId, pageable)
     }
 
+    // 게시물 수정 시
     @GetMapping("/{postId}/get")
     fun getPostById(
         @CurrentUserId userId: Long,

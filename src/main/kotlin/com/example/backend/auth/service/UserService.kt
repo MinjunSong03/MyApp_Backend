@@ -32,6 +32,8 @@ class UserService(
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
+       check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
        // 수정 필요
        check(user.status == UserStatus.ACTIVE || user.status == UserStatus.DELETED) { "활성화된 사용자만 프로필을 변경할 수 있습니다." }
 
@@ -55,6 +57,8 @@ class UserService(
         val blocker = userRepository.findByIdOrNull(blockerId)
             ?: throw IllegalArgumentException("Invalid user")
 
+        check(blocker.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val blocked = userRepository.findByIdOrNull(blockedId)
             ?: throw IllegalArgumentException("차단 대상 유저를 찾을 수 없습니다.")
 
@@ -64,6 +68,11 @@ class UserService(
 
     @Transactional
     fun unblockUser(blockerId: Long, blockedId: Long) {
+        val Blocker = userRepository.findByIdOrNull(blockerId)
+            ?: throw IllegalArgumentException("Invalid user")
+
+        check(Blocker.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         userBlockRepository.deleteByBlockerIdAndBlockedId(blockerId, blockedId)
     }
 
@@ -103,6 +112,8 @@ class UserService(
 
         val reporter = userRepository.findByIdOrNull(reporterId)
             ?: throw IllegalArgumentException("Invalid user")
+
+        check(reporter.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val targetUser = userRepository.findByIdOrNull(targetId)
             ?: throw IllegalArgumentException("신고할 사용자를 찾을 수 없습니다.")

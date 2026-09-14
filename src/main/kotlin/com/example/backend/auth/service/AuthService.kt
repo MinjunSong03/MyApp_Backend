@@ -65,6 +65,8 @@ class AuthService(
         userHiddenPostRepository.deleteAllByUserId(userId)
 
         user.withdraw()
+
+
     }
 
     @Transactional

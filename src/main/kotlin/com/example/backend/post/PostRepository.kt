@@ -30,22 +30,15 @@ interface PostRepository: JpaRepository<Post, Long> {
         pageable: Pageable
     ): Slice<Post>
 
-    // (게시물 상태에 따른) 나 혹은 타인의 게시물 조회.
-    fun findByStatusAndUserIdOrderByCreatedAtDesc(
-        status: PostStatus,
-        userId: Long,
-        pageable: Pageable
-    ): Slice<Post>
-
     // 내가 숨김 처리하지 않은 나의 모든 게시물 조회.
-    fun findByStatusAndUserIdAndIsHiddenFalse(
+    fun findByStatusAndUserIdAndIsHiddenFalseOrderByCreatedAtDesc(
         status: PostStatus,
         userId: Long,
         pageable: Pageable
     ): Slice<Post>
 
     // 내가 숨김 처리한 나의 모든 게시물 조회.
-    fun findByStatusAndUserIdAndIsHiddenTrue(
+    fun findByStatusAndUserIdAndIsHiddenTrueOrderByCreatedAtDesc(
         status: PostStatus,
         userId: Long,
         pageable: Pageable
@@ -54,8 +47,4 @@ interface PostRepository: JpaRepository<Post, Long> {
     @Modifying
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
     fun incrementViewCount(@Param("postId") postId: Long)
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM Post p WHERE p.id = :postId")
-    fun findByIdWithLock(@Param("postId") postId: Long): Post?
 }

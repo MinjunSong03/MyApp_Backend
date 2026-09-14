@@ -12,6 +12,7 @@ import com.example.backend.report.ReportComment
 import com.example.backend.report.ReportCommentRepository
 import com.example.backend.report.ReportReason
 import com.example.backend.user.UserRepository
+import com.example.backend.user.UserStatus
 import org.springframework.data.domain.Slice
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -31,6 +32,8 @@ class CommentService(
 
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
+
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(request.postId)
             ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
@@ -67,6 +70,8 @@ class CommentService(
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val comment = commentRepository.findByIdOrNull(commentId)
             ?: throw IllegalArgumentException("존재하지 않는 댓글입니다.")
 
@@ -85,6 +90,8 @@ class CommentService(
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
         val comment = commentRepository.findByIdOrNull(commentId)
             ?: throw IllegalArgumentException("존재하지 않는 댓글입니다.")
 
@@ -99,6 +106,8 @@ class CommentService(
     fun reportComment(reporterId: Long, commentId: Long, reason: ReportReason, detail: String) {
         val reporter = userRepository.findByIdOrNull(reporterId)
             ?: throw IllegalArgumentException("신고자를 찾을 수 없습니다.")
+
+        check(reporter.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val comment = commentRepository.findByIdOrNull(commentId)
             ?: throw IllegalArgumentException("해당 댓글을 찾을 수 없습니다.")
