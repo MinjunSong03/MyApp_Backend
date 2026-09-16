@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petgram Admin - 댓글 신고 관리</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .table th { background-color: #e9ecef; }
+        .comment-box { background-color: #f1f3f5; border-left: 4px solid #adb5bd; padding: 8px 12px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<!-- 상단 네비게이션 바 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/admin/reports/posts">🐾 Petgram Console</a>
+        <div class="navbar-nav">
+            <a class="nav-link text-white-50" href="/admin/reports/posts">게시글 신고</a>
+            <a class="nav-link active fw-bold" href="/admin/reports/comments">댓글 신고</a>
+            <a class="nav-link text-white-50" href="/admin/reports/users">유저 신고</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">💬 댓글 신고 관리</h4>
+        <span class="badge bg-secondary fs-6" th:text="|총 ${reports.totalElements}건|"></span>
+    </div>
+
+    <!-- 상태 탭 -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${currentStatus.name() == 'PENDING'} ? 'active bg-primary' : 'bg-white text-dark'"
+               href="/admin/reports/comments?status=PENDING">대기중 (PENDING)</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" th:classappend="${currentStatus.name() == 'ACCEPTED'} ? 'active bg-danger' : 'bg-white text-dark'"
+               href="/admin/reports/comments?status=ACCEPTED">승인/블라인드됨 (ACCEPTED)</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" th:classappend="${currentStatus.name() == 'REJECTED'} ? 'active bg-secondary' : 'bg-white text-dark'"
+               href="/admin/reports/comments?status=REJECTED">기각됨 (REJECTED)</a>
+        </li>
+    </ul>
+
+    <!-- 댓글 신고 목록 테이블 -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 12%;">신고자</th>
+                        <th style="width: 12%;">피신고자 (작성자)</th>
+                        <th style="width: 35%;">댓글 원문 내용</th>
+                        <th style="width: 15%;">신고 사유</th>
+                        <th style="width: 11%;">접수 일시</th>
+                        <th style="width: 10%; text-align: center;">조치</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${reports.content.isEmpty()}">
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            신고 내역이 존재하지 않습니다.
+                        </td>
+                    </tr>
+
+                    <tr th:each="report : ${reports.content}" th:id="|report-row-${report.reportId}|">
+                        <td class="fw-bold" th:text="|#${report.reportId}|"></td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${report.reporterNickname}"></span>
+                            <small class="text-muted d-block" th:text="|ID: ${report.reporterId}|"></small>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-danger" th:text="${report.reportedUserNickname}"></span>
+                            <small class="text-muted d-block" th:text="|ID: ${report.reportedUserId}|"></small>
+                        </td>
+                        <td>
+                            <div class="comment-box" th:text="${report.commentContent}"></div>
+                            <small class="text-muted" th:text="|댓글 ID: #${report.commentId} (현재 상태: ${report.commentStatus})|"></small>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning text-dark mb-1" th:text="${report.reason}"></span>
+                            <div class="small text-secondary text-truncate" style="max-width: 220px;" th:text="${report.detail}"></div>
+                        </td>
+                        <td>
+                            <small class="text-muted" th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                        </td>
+                        <td style="text-align: center;">
+                            <div th:if="${report.reportStatus.name() == 'PENDING'}" class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-danger"
+                                        th:hx-patch="|/admin/reports/comments/${report.reportId}/accept|"
+                                        th:hx-target="|#report-row-${report.reportId}|"
+                                        hx-swap="outerHTML"
+                                        hx-confirm="이 댓글을 블라인드 처리하시겠습니까?">
+                                    승인
+                                </button>
+                                <button class="btn btn-outline-secondary"
+                                        th:hx-patch="|/admin/reports/comments/${report.reportId}/reject|"
+                                        th:hx-target="|#report-row-${report.reportId}|"
+                                        hx-swap="outerHTML"
+                                        hx-confirm="신고를 기각하시겠습니까?">
+                                    기각
+                                </button>
+                            </div>
+                            <div th:if="${report.reportStatus.name() != 'PENDING'}">
+                                    <span class="badge" th:classappend="${report.reportStatus.name() == 'ACCEPTED'} ? 'bg-danger' : 'bg-secondary'"
+                                          th:text="${report.reportStatus}"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HTMX 응답 Fragment -->
+<tr th:fragment="report-action-done(status)" class="table-secondary text-muted">
+    <td colspan="6" class="py-3 text-center">
+        <span>✅ 조치가 완료되었습니다. (처리 결과: </span>
+        <strong class="text-uppercase" th:text="${status}"></strong>
+        <span>)</span>
+    </td>
+    <td class="text-center">
+        <span class="badge bg-secondary">처리 완료</span>
+    </td>
+</tr>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -8,4 +8,9 @@ interface ReportPostRepository: JpaRepository<ReportPost, Long> {
 
     fun existsByReporterIdAndPostId(reporterId: Long, postId: Long): Boolean
     fun deleteAllByPostId(postId: Long)
+
+    fun findByStatusOrderByCreatedAtDesc(
+        status: ReportStatus,
+        pageable: Pageable
+    ): Page<ReportPost>
 }

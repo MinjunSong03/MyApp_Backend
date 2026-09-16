@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 
 enum class UserStatus { ACTIVE, BANNED, DELETED }
 enum class AuthProvider { LOCAL, KAKAO }
+enum class Role { USER, ADMIN }
 
 @Entity
 @Table(name = "users")
@@ -12,6 +13,10 @@ class User (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var role: Role = Role.USER,
 
     @Enumerated(EnumType.STRING)
     var provider: AuthProvider? = AuthProvider.LOCAL,
