@@ -3,20 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petgram Admin - 유저 신고 관리</title>
+    <title>Admin - 유저 신고 관리</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <style>
         body { background-color: #f8f9fa; }
         .table th { background-color: #e9ecef; }
+        .clickable-row { cursor: pointer; }
+        .text-cell {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+            word-break: break-all;
+        }
+        tr.expanded .text-cell {
+            white-space: normal;
+            overflow: visible;
+        }
     </style>
 </head>
 <body>
 
-<!-- 상단 네비게이션 바 -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="/admin/reports/posts">🐾 Petgram Console</a>
+        <a class="navbar-brand fw-bold" href="/admin/reports/posts">Admin - 신고 관리</a>
         <div class="navbar-nav">
             <a class="nav-link text-white-50" href="/admin/reports/posts">게시글 신고</a>
             <a class="nav-link text-white-50" href="/admin/reports/comments">댓글 신고</a>
@@ -27,11 +38,10 @@
 
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold mb-0">👤 유저 신고 관리</h4>
+        <h4 class="fw-bold mb-0">유저 신고 관리</h4>
         <span class="badge bg-secondary fs-6" th:text="|총 ${reports.totalElements}건|"></span>
     </div>
 
-    <!-- 상태 탭 -->
     <ul class="nav nav-pills mb-3">
         <li class="nav-item">
             <a class="nav-link" th:classappend="${currentStatus.name() == 'PENDING'} ? 'active bg-primary' : 'bg-white text-dark'"
@@ -45,9 +55,12 @@
             <a class="nav-link" th:classappend="${currentStatus.name() == 'REJECTED'} ? 'active bg-secondary' : 'bg-white text-dark'"
                href="/admin/reports/users?status=REJECTED">기각됨 (REJECTED)</a>
         </li>
+        <li class="nav-item ms-2">
+            <a class="nav-link" th:classappend="${currentStatus.name() == 'RESTORED'} ? 'active bg-success' : 'bg-white text-dark'"
+               href="/admin/reports/users?status=RESTORED">정지 해제됨 (RESTORED)</a>
+        </li>
     </ul>
 
-    <!-- 유저 신고 목록 테이블 -->
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -56,10 +69,10 @@
                     <tr>
                         <th style="width: 5%;">ID</th>
                         <th style="width: 12%;">신고자</th>
-                        <th style="width: 18%;">피신고자 (대상 유저)</th>
-                        <th style="width: 12%; text-align: center;">누적 피신고 횟수</th>
+                        <th style="width: 16%;">피신고자 (대상 유저)</th>
+                        <th style="width: 12%; text-align: center;">누적 피신고</th>
                         <th style="width: 12%; text-align: center;">계정 상태</th>
-                        <th style="width: 18%;">신고 사유</th>
+                        <th style="width: 20%;">신고 사유</th>
                         <th style="width: 11%;">접수 일시</th>
                         <th style="width: 12%; text-align: center;">조치</th>
                     </tr>
@@ -71,31 +84,34 @@
                         </td>
                     </tr>
 
-                    <tr th:each="report : ${reports.content}" th:id="|report-row-${report.reportId}|">
+                    <tr th:each="report : ${reports.content}"
+                        th:id="|report-row-${report.reportId}|"
+                        class="clickable-row"
+                        onclick="this.classList.toggle('expanded')">
                         <td class="fw-bold" th:text="|#${report.reportId}|"></td>
                         <td>
-                            <span class="badge bg-light text-dark border" th:text="${report.reporterNickname}"></span>
+                            <div class="fw-semibold text-dark text-cell" style="max-width: 110px;" th:text="${report.reporterNickname}"></div>
                             <small class="text-muted d-block" th:text="|ID: ${report.reporterId}|"></small>
                         </td>
                         <td>
-                            <span class="fw-bold text-danger fs-6" th:text="${report.reportedUserNickname}"></span>
-                            <small class="text-muted d-block" th:text="|유저 ID: ${report.reportedUserId}|"></small>
+                            <div class="fw-bold text-danger fs-6 text-cell" style="max-width: 140px;" th:text="${report.reportedNickname}"></div>
+                            <small class="text-muted d-block" th:text="|유저 ID: ${report.reportedId}|"></small>
                         </td>
                         <td style="text-align: center;">
-                            <span class="badge bg-danger rounded-pill px-3 py-2" th:text="|${report.reportedUserReportCount} 회|"></span>
+                            <span class="badge bg-danger rounded-pill px-3 py-2" th:text="|${report.reportedReportCount} 회|"></span>
                         </td>
                         <td style="text-align: center;">
-                                <span class="badge" th:classappend="${report.reportedUserStatus.name() == 'BANNED'} ? 'bg-dark' : 'bg-success'"
-                                      th:text="${report.reportedUserStatus}"></span>
+                            <span class="badge" th:classappend="${report.reportedStatus.name() == 'BANNED'} ? 'bg-dark' : 'bg-success'"
+                                  th:text="${report.reportedStatus}"></span>
                         </td>
                         <td>
                             <span class="badge bg-warning text-dark mb-1" th:text="${report.reason}"></span>
-                            <div class="small text-secondary text-truncate" style="max-width: 220px;" th:text="${report.detail}"></div>
+                            <div class="small text-secondary text-cell" style="max-width: 220px;" th:text="${report.detail}"></div>
                         </td>
                         <td>
                             <small class="text-muted" th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
                         </td>
-                        <td style="text-align: center;">
+                        <td style="text-align: center;" onclick="event.stopPropagation()">
                             <div th:if="${report.reportStatus.name() == 'PENDING'}" class="btn-group btn-group-sm">
                                 <button class="btn btn-danger"
                                         th:hx-patch="|/admin/reports/users/${report.reportId}/accept|"
@@ -112,10 +128,24 @@
                                     기각
                                 </button>
                             </div>
-                            <div th:if="${report.reportStatus.name() != 'PENDING'}">
-                                    <span class="badge" th:classappend="${report.reportStatus.name() == 'ACCEPTED'} ? 'bg-danger' : 'bg-secondary'"
-                                          th:text="${report.reportStatus}"></span>
+
+                            <div th:if="${report.reportStatus.name() == 'ACCEPTED'}">
+                                <button class="btn btn-sm btn-outline-success"
+                                        th:hx-patch="|/admin/reports/users/${report.reportId}/restore|"
+                                        th:hx-target="|#report-row-${report.reportId}|"
+                                        hx-swap="outerHTML"
+                                        hx-confirm="해당 유저의 이용 정지를 해제하고 정상(ACTIVE) 상태로 복구하시겠습니까?">
+                                    정지 해제
+                                </button>
                             </div>
+
+                            <span th:if="${report.reportStatus.name() == 'RESTORED'}" class="badge bg-success">
+                                정지 해제됨
+                            </span>
+
+                            <span th:if="${report.reportStatus.name() == 'REJECTED'}" class="badge bg-secondary">
+                                기각됨
+                            </span>
                         </td>
                     </tr>
                     </tbody>
@@ -125,7 +155,6 @@
     </div>
 </div>
 
-<!-- HTMX 응답 Fragment -->
 <tr th:fragment="report-action-done(status)" class="table-secondary text-muted">
     <td colspan="7" class="py-3 text-center">
         <span>✅ 조치가 완료되었습니다. (처리 결과: </span>

@@ -54,7 +54,6 @@ class PostService (
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
-
         val posts = postRepository.findFilteredFeed(PostStatus.ACTIVE, userId, pageable)
 
         return posts.map { PostResponse.from(post = it, currentUserId = user.id) }

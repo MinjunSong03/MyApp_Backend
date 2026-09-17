@@ -41,4 +41,16 @@ class ReportComment(
 
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
-)
+) {
+    fun accept() {
+        this.status = ReportStatus.ACCEPTED
+    }
+
+    fun reject() {
+        this.status = ReportStatus.REJECTED
+    }
+
+    fun restore() {
+        this.status = ReportStatus.RESTORED
+    }
+}

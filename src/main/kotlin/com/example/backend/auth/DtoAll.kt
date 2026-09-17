@@ -1,7 +1,6 @@
 package com.example.backend.auth
 
 import com.example.backend.comment.Comment
-import com.example.backend.post.MediaType
 import com.example.backend.post.Post
 import com.example.backend.report.ReportReason
 import com.example.backend.user.User

@@ -68,6 +68,12 @@ class User (
         this.updatedAt = LocalDateTime.now()
     }
 
+    fun unban() {
+        this.status = UserStatus.ACTIVE
+        this.reportCount = 0
+        this.updatedAt = LocalDateTime.now()
+    }
+
     fun incrementReportCount() {
         this.reportCount += 1
         if (this.reportCount >= 5) {

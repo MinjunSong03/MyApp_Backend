@@ -58,11 +58,23 @@ class Comment(
         this.reportCount += 1
         if (this.reportCount >= 5) {
             this.status = CommentStatus.BLINDED
+            this.updatedAt = LocalDateTime.now()
         }
     }
 
     fun delete() {
         this.status = CommentStatus.DELETED
+        this.updatedAt = LocalDateTime.now()
+    }
+
+    fun blind() {
+        this.status = CommentStatus.BLINDED
+        this.updatedAt = LocalDateTime.now()
+    }
+
+    fun unblind() {
+        this.status = CommentStatus.ACTIVE
+        this.reportCount = 0
         this.updatedAt = LocalDateTime.now()
     }
 }

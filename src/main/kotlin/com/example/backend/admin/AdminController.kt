@@ -20,23 +20,16 @@ import org.springframework.web.bind.annotation.RestController
 class AdminController(
     private val adminService: AdminService
 ) {
-    // 관리자가 명시적으로 게시물의 상태를 지정
-    @PatchMapping("/posts/{postId}/status")
-    fun updatePostStatus(
-        @CurrentUserId adminId: Long,
-        @PathVariable postId: Long,
-        @RequestParam newStatus: PostStatus
-    ): ResponseEntity<Unit> {
-        adminService.updatePostStatus(adminId, postId, newStatus)
-        return ResponseEntity.noContent().build()
-    }
-
     // 게시물 신고 관리
     @GetMapping("/posts")
     fun getPostReports(
         @CurrentUserId adminId: Long,
         @RequestParam(defaultValue = "PENDING") status: ReportStatus,
-        @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable
+        @PageableDefault(
+            size = 20,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
     ): ResponseEntity<Page<AdminPostReportResponse>> {
         return ResponseEntity.ok(adminService.getPostReports(adminId, status, pageable))
     }
@@ -59,12 +52,25 @@ class AdminController(
         return ResponseEntity.noContent().build()
     }
 
+    @PatchMapping("/posts/{reportId}/restore")
+    fun restorePostReport(
+        @CurrentUserId adminId: Long,
+        @PathVariable reportId: Long
+    ): ResponseEntity<Unit> {
+        adminService.restorePost(adminId, reportId)
+        return ResponseEntity.noContent().build()
+    }
+
     // 댓글 신고 관리
     @GetMapping("/comments")
     fun getCommentReports(
         @CurrentUserId adminId: Long,
         @RequestParam(defaultValue = "PENDING") status: ReportStatus,
-        @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable
+        @PageableDefault(
+            size = 20,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
     ): ResponseEntity<Page<AdminCommentReportResponse>> {
         return ResponseEntity.ok(adminService.getCommentReports(adminId, status, pageable))
     }
@@ -87,12 +93,25 @@ class AdminController(
         return ResponseEntity.noContent().build()
     }
 
+    @PatchMapping("/comments/{reportId}/restore")
+    fun restoreCommentReport(
+        @CurrentUserId adminId: Long,
+        @PathVariable reportId: Long
+    ): ResponseEntity<Unit> {
+        adminService.restoreComment(adminId, reportId)
+        return ResponseEntity.noContent().build()
+    }
+
     // 유저 신고 관리
     @GetMapping("/users")
     fun getUserReports(
         @CurrentUserId adminId: Long,
         @RequestParam(defaultValue = "PENDING") status: ReportStatus,
-        @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable
+        @PageableDefault(
+            size = 20,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
     ): ResponseEntity<Page<AdminUserReportResponse>> {
         return ResponseEntity.ok(adminService.getUserReports(adminId, status, pageable))
     }
@@ -112,6 +131,15 @@ class AdminController(
         @PathVariable reportId: Long
     ): ResponseEntity<Unit> {
         adminService.rejectUserReport(adminId, reportId)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PatchMapping("/users/{reportId}/restore")
+    fun unbanUserReport(
+        @CurrentUserId adminId: Long,
+        @PathVariable reportId: Long
+    ): ResponseEntity<Unit> {
+        adminService.unbanUser(adminId, reportId)
         return ResponseEntity.noContent().build()
     }
 }

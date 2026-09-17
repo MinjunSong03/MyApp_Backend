@@ -23,7 +23,11 @@ class AdminViewController(
     @GetMapping("/posts")
     fun postReportsPage(
         @RequestParam(defaultValue = "PENDING") status: ReportStatus,
-        @PageableDefault(size = 15, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable,
+        @PageableDefault(
+            size = 15,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable,
         model: Model
     ): String {
         val reports = adminService.getPostReports(defaultAdminId, status, pageable)
@@ -34,8 +38,7 @@ class AdminViewController(
 
     @PatchMapping("/posts/{reportId}/accept")
     fun acceptPostReport(
-        @PathVariable reportId: Long,
-        model: Model
+        @PathVariable reportId: Long
     ): String {
         adminService.acceptPostReport(defaultAdminId, reportId)
         return "admin/posts :: report-action-done(status='ACCEPTED')"
@@ -43,11 +46,16 @@ class AdminViewController(
 
     @PatchMapping("/posts/{reportId}/reject")
     fun rejectPostReport(
-        @PathVariable reportId: Long,
-        model: Model
+        @PathVariable reportId: Long
     ): String {
         adminService.rejectPostReport(defaultAdminId, reportId)
         return "admin/posts :: report-action-done(status='REJECTED')"
+    }
+
+    @PatchMapping("/posts/{reportId}/restore")
+    fun restorePost(@PathVariable reportId: Long): String {
+        adminService.restorePost(defaultAdminId, reportId)
+        return "admin/posts :: report-action-done(status='RESTORED')"
     }
 
 
@@ -55,7 +63,11 @@ class AdminViewController(
     @GetMapping("/comments")
     fun commentReportsPage(
         @RequestParam(defaultValue = "PENDING") status: ReportStatus,
-        @PageableDefault(size = 15, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable,
+        @PageableDefault(
+            size = 15,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable,
         model: Model
     ): String {
         val reports = adminService.getCommentReports(defaultAdminId, status, pageable)
@@ -76,11 +88,21 @@ class AdminViewController(
         return "admin/comments :: report-action-done(status='REJECTED')"
     }
 
+    @PatchMapping("/comments/{reportId}/restore")
+    fun restoreComment(@PathVariable reportId: Long): String {
+        adminService.restoreComment(defaultAdminId, reportId)
+        return "admin/comments :: report-action-done(status='RESTORED')"
+    }
+
     // 유저 신고
     @GetMapping("/users")
     fun userReportsPage(
         @RequestParam(defaultValue = "PENDING") status: ReportStatus,
-        @PageableDefault(size = 15, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable,
+        @PageableDefault(
+            size = 15,
+            sort = ["createdAt"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable,
         model: Model
     ): String {
         val reports = adminService.getUserReports(defaultAdminId, status, pageable)
@@ -99,5 +121,11 @@ class AdminViewController(
     fun rejectUserReport(@PathVariable reportId: Long): String {
         adminService.rejectUserReport(defaultAdminId, reportId)
         return "admin/users :: report-action-done(status='REJECTED')"
+    }
+
+    @PatchMapping("/users/{reportId}/restore")
+    fun unbanUser(@PathVariable reportId: Long): String {
+        adminService.unbanUser(defaultAdminId, reportId)
+        return "admin/users :: report-action-done(status='RESTORED')"
     }
 }

@@ -10,6 +10,7 @@ import com.example.backend.report.ReportStatus
 import com.example.backend.report.ReportUserRepository
 import com.example.backend.user.Role
 import com.example.backend.user.UserRepository
+import com.example.backend.user.UserStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
@@ -32,15 +33,6 @@ class AdminService(
         check(admin.role == Role.ADMIN) { "관리자 권한이 없습니다." }
     }
 
-    // 관리자가 명시적으로 게시물의 상태를 지정
-    @Transactional
-    fun updatePostStatus(adminId: Long, postId: Long, newStatus: PostStatus) {
-        validateAdmin(adminId)
-        val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
-        post.status = newStatus
-    }
-
     // 게시물 신고 관리
     @Transactional(readOnly = true)
     fun getPostReports(adminId: Long, status: ReportStatus, pageable: Pageable): Page<AdminPostReportResponse> {
@@ -51,10 +43,11 @@ class AdminService(
                 reportId = report.id,
                 reporterId = report.reporter.id,
                 reporterNickname = report.reporter.nickname,
-                reportedUserId = report.post.user.id,
-                reportedUserNickname = report.post.user.nickname,
+                reportedId = report.post.user.id,
+                reportedNickname = report.post.user.nickname,
                 postId = report.post.id,
                 postTitle = report.post.title,
+                postDescription = report.post.description,
                 mediaUrls = media,
                 reason = report.reason,
                 detail = report.detail,
@@ -71,8 +64,13 @@ class AdminService(
         val report = reportPostRepository.findByIdOrNull(reportId)
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
-        report.status = ReportStatus.ACCEPTED
-        report.post.status = PostStatus.BLINDED
+        val post = postRepository.findByIdOrNull(report.post.id)
+            ?: throw IllegalArgumentException("게시글을 찾을 수 없습니다.")
+
+        post.blind()
+        report.accept()
+        postRepository.save(post)
+        reportPostRepository.save(report)
     }
 
     @Transactional
@@ -81,7 +79,25 @@ class AdminService(
         val report = reportPostRepository.findByIdOrNull(reportId)
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
-        report.status = ReportStatus.REJECTED
+        report.reject()
+        reportPostRepository.save(report)
+        reportPostRepository.deleteAllByPostId(report.post.id)
+    }
+
+    @Transactional
+    fun restorePost(adminId: Long, reportId: Long) {
+        validateAdmin(adminId)
+        val report = reportPostRepository.findByIdOrNull(reportId)
+            ?: throw IllegalArgumentException("신고 내역을 찾을 수 없습니다.")
+
+        val post = postRepository.findByIdOrNull(report.post.id)
+            ?: throw IllegalArgumentException("게시글을 찾을 수 없습니다.")
+
+        post.unblind()
+        report.restore()
+        postRepository.save(post)
+        reportPostRepository.save(report)
+        reportPostRepository.deleteAllByPostId(report.post.id)
     }
 
     // 댓글 신고 관리
@@ -93,8 +109,8 @@ class AdminService(
                 reportId = report.id,
                 reporterId = report.reporter.id,
                 reporterNickname = report.reporter.nickname,
-                reportedUserId = report.comment.user.id,
-                reportedUserNickname = report.comment.user.nickname,
+                reportedId = report.comment.user.id,
+                reportedNickname = report.comment.user.nickname,
                 commentId = report.comment.id,
                 commentContent = report.comment.content,
                 reason = report.reason,
@@ -112,8 +128,13 @@ class AdminService(
         val report = reportCommentRepository.findByIdOrNull(reportId)
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
-        report.status = ReportStatus.ACCEPTED
-        report.comment.status = CommentStatus.BLINDED
+        val comment = commentRepository.findByIdOrNull(report.comment.id)
+            ?: throw IllegalArgumentException("댓글을 찾을 수 없습니다.")
+
+        comment.blind()
+        report.accept()
+        commentRepository.save(comment)
+        reportCommentRepository.save(report)
     }
 
     @Transactional
@@ -122,7 +143,25 @@ class AdminService(
         val report = reportCommentRepository.findByIdOrNull(reportId)
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
-        report.status = ReportStatus.REJECTED
+        report.reject()
+        reportCommentRepository.save(report)
+        reportCommentRepository.deleteAllByCommentId(report.comment.id)
+    }
+
+    @Transactional
+    fun restoreComment(adminId: Long, reportId: Long) {
+        validateAdmin(adminId)
+        val report = reportCommentRepository.findByIdOrNull(reportId)
+            ?: throw IllegalArgumentException("신고 내역을 찾을 수 없습니다.")
+
+        val comment = commentRepository.findByIdOrNull(report.comment.id)
+            ?: throw IllegalArgumentException("댓글을 찾을 수 없습니다.")
+
+        comment.unblind()
+        report.restore()
+        commentRepository.save(comment)
+        reportCommentRepository.save(report)
+        reportCommentRepository.deleteAllByCommentId(report.comment.id)
     }
 
     // 유저 신고 관리
@@ -134,10 +173,10 @@ class AdminService(
                 reportId = report.id,
                 reporterId = report.reporter.id,
                 reporterNickname = report.reporter.nickname,
-                reportedUserId = report.reported.id,
-                reportedUserNickname = report.reported.nickname,
-                reportedUserReportCount = report.reported.reportCount,
-                reportedUserStatus = report.reported.status,
+                reportedId = report.reported.id,
+                reportedNickname = report.reported.nickname,
+                reportedReportCount = report.reported.reportCount,
+                reportedStatus = report.reported.status,
                 reason = report.reason,
                 detail = report.detail,
                 reportStatus = report.status,
@@ -152,8 +191,13 @@ class AdminService(
         val report = reportUserRepository.findByIdOrNull(reportId)
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
-        report.status = ReportStatus.ACCEPTED
-        report.reported.ban()
+        val user = userRepository.findByIdOrNull(report.reported.id)
+            ?: throw IllegalArgumentException("유저를 찾을 수 없습니다.")
+
+        user.ban()
+        report.accept()
+        userRepository.save(user)
+        reportUserRepository.save(report)
     }
 
     @Transactional
@@ -162,6 +206,24 @@ class AdminService(
         val report = reportUserRepository.findByIdOrNull(reportId)
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
-        report.status = ReportStatus.REJECTED
+        report.reject()
+        reportUserRepository.save(report)
+        reportUserRepository.deleteAllByReportedId(report.reported.id)
+    }
+
+    @Transactional
+    fun unbanUser(adminId: Long, reportId: Long) {
+        validateAdmin(adminId)
+        val report = reportUserRepository.findByIdOrNull(reportId)
+            ?: throw IllegalArgumentException("신고 내역을 찾을 수 없습니다.")
+
+        val user = userRepository.findByIdOrNull(report.reported.id)
+            ?: throw IllegalArgumentException("유저를 찾을 수 없습니다.")
+
+        user.unban()
+        report.restore()
+        userRepository.save(user)
+        reportUserRepository.save(report)
+        reportUserRepository.deleteAllByReportedId(report.reported.id)
     }
 }

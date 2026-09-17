@@ -5,7 +5,6 @@ import jakarta.persistence.*
 import org.hibernate.annotations.BatchSize
 import java.time.LocalDateTime
 
-enum class MediaType { IMAGE, VIDEO }
 enum class PostStatus { ACTIVE, BLINDED, DELETED }
 
 @Entity
@@ -95,6 +94,7 @@ class Post(
         this.reportCount += 1
         if (this.reportCount >= 5) {
             this.status = PostStatus.BLINDED
+            this.updatedAt = LocalDateTime.now()
         }
     }
 
@@ -107,6 +107,16 @@ class Post(
     fun unhide() {
         this.isHidden = false
         this.hiddenAt = null
+        this.updatedAt = LocalDateTime.now()
+    }
+    fun blind() {
+        this.status = PostStatus.BLINDED
+        this.updatedAt = LocalDateTime.now()
+    }
+
+    fun unblind() {
+        this.status = PostStatus.ACTIVE
+        this.reportCount = 0
         this.updatedAt = LocalDateTime.now()
     }
 }
