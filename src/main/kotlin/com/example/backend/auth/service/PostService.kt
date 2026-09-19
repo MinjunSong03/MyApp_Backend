@@ -209,7 +209,7 @@ class PostService (
     }
 
     @Transactional
-    fun unhidePost(userId: Long, postId: Long) {
+    fun unhidePost(userId: Long, postId: Long): PostResponse {
         val user = userRepository.findByIdOrNull(userId)
             ?: throw IllegalArgumentException("Invalid user")
 
@@ -220,7 +220,8 @@ class PostService (
 
         if (user.id == post.user.id) {
             post.unhide()
-    } else {
+            return PostResponse.from(post = post, currentUserId = userId)
+        } else {
             throw IllegalArgumentException("본인의 게시물만 숨김 해제 가능합니다.")
         }
     }

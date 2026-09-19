@@ -115,12 +115,11 @@ class PostController(
     }
 
     @DeleteMapping("/{postId}/unhide")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unhidePost(
         @CurrentUserId userId: Long,
         @PathVariable postId: Long
-    ) {
-        postService.unhidePost(userId, postId)
+    ): PostResponse {
+        return postService.unhidePost(userId, postId)
     }
 
     @PostMapping("/{postId}/reports")
