@@ -15,7 +15,7 @@ interface UserBlockRepository: JpaRepository<UserBlock, Long> {
     SELECT ub.blocked 
     FROM UserBlock ub 
     WHERE ub.blocker.id = :blockerId 
-    ORDER BY ub.createdAt DESC
+    ORDER BY ub.id DESC
     """)
     fun findBlockedIdsByBlockerId(
         @Param("blockerId") blockerId: Long,

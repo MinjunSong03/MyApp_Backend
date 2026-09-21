@@ -22,7 +22,7 @@ interface PostRepository: JpaRepository<Post, Long> {
           AND p.id NOT IN (
               SELECT hp.post.id FROM UserHiddenPost hp WHERE hp.user.id = :currentUserId
           )
-        ORDER BY p.createdAt DESC
+        ORDER BY p.id DESC
     """)
     fun findFilteredFeed(
         @Param("status") status: PostStatus,

@@ -12,7 +12,7 @@ interface CommentRepository: JpaRepository<Comment, Long> {
         JOIN FETCH c.user
         WHERE c.post.id = :postId
           AND c.status = :status
-        ORDER BY c.createdAt ASC
+        ORDER BY c.id DESC
     """)
     fun findActiveComments(
         @Param("postId") postId: Long,
