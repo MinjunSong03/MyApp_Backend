@@ -3,6 +3,7 @@ package com.example.backend.auth.controller
 import com.example.backend.auth.CreatePostRequest
 import com.example.backend.auth.CreateReportRequest
 import com.example.backend.auth.EditPostRequest
+import com.example.backend.auth.LikeResponse
 import com.example.backend.auth.PostResponse
 import com.example.backend.auth.service.PostService
 import com.example.backend.common.CurrentUserId
@@ -143,5 +144,33 @@ class PostController(
         ) pageable: Pageable
     ): Slice<PostResponse> {
         return postService.getUserPosts(currentUserId = currentUserId, targetUserId = targetUserId, pageable = pageable)
+    }
+
+    @GetMapping("/my_likes")
+    fun getMyLikedPosts(
+        @CurrentUserId userId: Long,
+        @PageableDefault(
+            size = 10,
+            sort = ["id"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
+    ): Slice<PostResponse> {
+        return postService.getMyLikedPosts(userId, pageable)
+    }
+
+    @PostMapping("/{postId}/like")
+    fun likePost(
+        @CurrentUserId userId: Long,
+        @PathVariable postId: Long
+    ): LikeResponse {
+        return postService.likePost(userId = userId, postId = postId)
+    }
+
+    @DeleteMapping("/{postId}/like")
+    fun unlikePost(
+        @CurrentUserId userId: Long,
+        @PathVariable postId: Long
+    ): LikeResponse {
+        return postService.unlikePost(userId = userId, postId = postId)
     }
 }

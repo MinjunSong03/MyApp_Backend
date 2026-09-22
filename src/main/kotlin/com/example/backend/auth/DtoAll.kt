@@ -13,12 +13,19 @@ data class OAuthLoginRequest(
     val accessToken: String
 )
 
+data class LikeResponse(
+    val isLiked: Boolean,
+    val likeCount: Long
+)
+
 data class UserProfileResponse(
     val id: Long,
     val nickname: String,
     val profileImageUrl: String? = null,
     val isDeleted: Boolean = false,
-    val isMine: Boolean = false
+    val isMine: Boolean = false,
+    val likeCount: Long = 0,
+    val isLiked: Boolean = false
 )
 
 data class UpdateProfileRequest(
@@ -82,6 +89,8 @@ data class PostResponse(
     val videoThumbnailUrl: String?,
     val imageUrls: List<String>,
     val viewCount: Long,
+    val likeCount: Long = 0,
+    val isLiked: Boolean = false,
     val createdAt: LocalDateTime,
     val editedAt: LocalDateTime?,
     val isMine: Boolean,
@@ -89,7 +98,11 @@ data class PostResponse(
     val isUserDeleted: Boolean
 ) {
     companion object {
-        fun from(post: Post, currentUserId: Long): PostResponse = PostResponse(
+        fun from(
+            post: Post,
+            currentUserId: Long,
+            isLiked: Boolean = false
+        ): PostResponse = PostResponse(
             id = post.id,
             userId = post.user.id,
             userNickname = post.user.nickname,
@@ -100,6 +113,8 @@ data class PostResponse(
             videoThumbnailUrl = post.videoThumbnailUrl,
             imageUrls = post.imageUrls.toList(),
             viewCount = post.viewCount,
+            likeCount = post.likeCount,
+            isLiked = isLiked,
             createdAt = post.createdAt,
             editedAt = post.editedAt,
             isMine = post.user.id == currentUserId,
@@ -145,7 +160,7 @@ data class CommentResponse(
             createdAt = comment.createdAt,
             editedAt = comment.editedAt,
             isMine = comment.user.id == currentUserId,
-            isUserDeleted = (comment.user.status == UserStatus.DELETED)
+            isUserDeleted = comment.user.status == UserStatus.DELETED
         )
     }
 }
@@ -156,18 +171,18 @@ data class CreateReportRequest(
     val detail: String
 )
 
-data class BlockedUserResponse(
+data class UserResponse(
     val id: Long,
     val nickname: String,
     val profileImageUrl: String?,
-    val status: UserStatus
+    val isDeleted: Boolean
 ) {
     companion object {
-        fun from(user: User): BlockedUserResponse = BlockedUserResponse(
+        fun from(user: User): UserResponse = UserResponse(
             id = user.id,
             nickname = user.nickname,
             profileImageUrl = user.profileImageUrl,
-            status = user.status
+            isDeleted = user.status == UserStatus.DELETED
         )
     }
 }

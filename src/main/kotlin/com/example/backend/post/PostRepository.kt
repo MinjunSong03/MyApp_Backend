@@ -44,7 +44,34 @@ interface PostRepository: JpaRepository<Post, Long> {
         pageable: Pageable
     ): Slice<Post>
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
     fun incrementViewCount(@Param("postId") postId: Long)
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount + 1 WHERE p.id = :postId")
+    fun incrementLikeCount(@Param("postId") postId: Long)
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :postId AND p.likeCount > 0")
+    fun decrementLikeCount(@Param("postId") postId: Long)
+
+    @Query("""
+        SELECT pl.post FROM PostLike pl
+        WHERE pl.user.id = :userId
+          AND pl.post.status = :status
+          AND pl.post.isHidden = false
+          AND pl.post.user.id NOT IN (
+              SELECT ub.blocked.id FROM UserBlock ub WHERE ub.blocker.id = :userId
+          )
+          AND pl.post.id NOT IN (
+              SELECT hp.post.id FROM UserHiddenPost hp WHERE hp.user.id = :userId
+          )
+        ORDER BY pl.id DESC
+    """)
+    fun findLikedPosts(
+        @Param("userId") userId: Long,
+        @Param("status") status: PostStatus = PostStatus.ACTIVE,
+        pageable: Pageable
+    ): Slice<Post>
 }

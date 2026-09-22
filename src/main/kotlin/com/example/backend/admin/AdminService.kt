@@ -65,7 +65,7 @@ class AdminService(
             ?: throw IllegalArgumentException("존재하지 않는 신고입니다.")
 
         val post = postRepository.findByIdOrNull(report.post.id)
-            ?: throw IllegalArgumentException("게시글을 찾을 수 없습니다.")
+            ?: throw IllegalArgumentException("게시물을 찾을 수 없습니다.")
 
         post.blind()
         report.accept()
@@ -91,7 +91,7 @@ class AdminService(
             ?: throw IllegalArgumentException("신고 내역을 찾을 수 없습니다.")
 
         val post = postRepository.findByIdOrNull(report.post.id)
-            ?: throw IllegalArgumentException("게시글을 찾을 수 없습니다.")
+            ?: throw IllegalArgumentException("게시물을 찾을 수 없습니다.")
 
         post.unblind()
         report.restore()

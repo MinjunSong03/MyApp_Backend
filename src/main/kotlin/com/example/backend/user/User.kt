@@ -31,6 +31,9 @@ class User (
     var profileImageUrl: String? = null,
 
     @Column(nullable = false)
+    var likeCount: Long = 0,
+
+    @Column(nullable = false)
     var reportCount: Int = 0,
 
     @Enumerated(EnumType.STRING)

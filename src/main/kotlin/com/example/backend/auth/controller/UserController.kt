@@ -1,7 +1,8 @@
 package com.example.backend.auth.controller
 
-import com.example.backend.auth.BlockedUserResponse
+import com.example.backend.auth.UserResponse
 import com.example.backend.auth.CreateReportRequest
+import com.example.backend.auth.LikeResponse
 import com.example.backend.auth.UpdateProfileRequest
 import com.example.backend.auth.UserProfileResponse
 import com.example.backend.auth.service.UserService
@@ -66,7 +67,7 @@ class UserController(
             sort = ["createdAt"],
             direction = Sort.Direction.DESC
         ) pageable: Pageable
-    ): Slice<BlockedUserResponse> {
+    ): Slice<UserResponse> {
         return userService.getMyBlockedUser(userId, pageable)
     }
 
@@ -91,5 +92,33 @@ class UserController(
             reason = request.reason,
             detail = request.detail
         )
+    }
+
+    @GetMapping("/my_likes")
+    fun getMyLikedUsers(
+        @CurrentUserId userId: Long,
+        @PageableDefault(
+            size = 10,
+            sort = ["id"],
+            direction = Sort.Direction.DESC
+        ) pageable: Pageable
+    ): Slice<UserResponse> {
+        return userService.getMyLikedUsers(userId, pageable)
+    }
+
+    @PostMapping("/{targetUserId}/like")
+    fun likeUser(
+        @CurrentUserId userId: Long,
+        @PathVariable targetUserId: Long
+    ): LikeResponse {
+        return userService.likeUser(fromUserId = userId, toUserId = targetUserId)
+    }
+
+    @DeleteMapping("/{targetUserId}/like")
+    fun unlikeUser(
+        @CurrentUserId userId: Long,
+        @PathVariable targetUserId: Long
+    ): LikeResponse {
+        return userService.unlikeUser(fromUserId = userId, toUserId = targetUserId)
     }
 }

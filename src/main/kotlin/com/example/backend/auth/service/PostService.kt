@@ -2,8 +2,11 @@ package com.example.backend.auth.service
 
 import com.example.backend.auth.CreatePostRequest
 import com.example.backend.auth.EditPostRequest
+import com.example.backend.auth.LikeResponse
 import com.example.backend.auth.PostResponse
 import com.example.backend.comment.CommentRepository
+import com.example.backend.like.PostLike
+import com.example.backend.like.PostLikeRepository
 import com.example.backend.post.Post
 import com.example.backend.post.PostRepository
 import com.example.backend.post.PostStatus
@@ -26,9 +29,10 @@ class PostService (
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
     private val userBlockRepository: UserBlockRepository,
-    private val reportRepository: ReportPostRepository,
+    private val reportPostRepository: ReportPostRepository,
     private val commentRepository: CommentRepository,
     private val userHiddenPostRepository: UserHiddenPostRepository,
+    private val postLikeRepository: PostLikeRepository,
     private val mediaService: MediaService
 ) {
     @Transactional
@@ -85,7 +89,7 @@ class PostService (
             ?: throw IllegalArgumentException("Invalid user")
 
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
+            ?: throw IllegalArgumentException("존재하지 않는 게시물입니다.")
 
         require(post.user.id == user.id) { "나의 게시물이 아닙니다." }
 
@@ -94,19 +98,22 @@ class PostService (
 
     @Transactional
     fun getPostDetail(userId: Long, postId: Long): PostResponse {
+        postRepository.incrementViewCount(postId)
+
         val post = postRepository.findByIdOrNull(postId)
             ?: throw IllegalArgumentException("Invalid post")
 
         if (post.status != PostStatus.ACTIVE) {
-            throw IllegalStateException("삭제되었거나 블라인드 처리된 게시글입니다.")
+            throw IllegalStateException("삭제되었거나 블라인드 처리된 게시물입니다.")
         }
 
         if (userBlockRepository.existsByBlockerIdAndBlockedId(blockerId = userId, blockedId = post.user.id)) {
-            throw IllegalStateException("차단한 사용자의 게시글은 열람할 수 없습니다.")
+            throw IllegalStateException("차단한 사용자의 게시물은 열람할 수 없습니다.")
         }
 
-        postRepository.incrementViewCount(postId)
-        return PostResponse.from(post, userId)
+        val isLiked = postLikeRepository.existsByUserIdAndPostId(userId = userId, postId = postId)
+
+        return PostResponse.from(post =  post, currentUserId = userId, isLiked =  isLiked)
     }
 
     @Transactional
@@ -117,9 +124,9 @@ class PostService (
         check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
+            ?: throw IllegalArgumentException("존재하지 않는 게시물입니다.")
 
-        require(post.user.id == user.id) { "게시글 수정 권한이 없습니다." }
+        require(post.user.id == user.id) { "게시물 수정 권한이 없습니다." }
 
         post.edit(
             title = request.title,
@@ -139,23 +146,21 @@ class PostService (
         check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
+            ?: throw IllegalArgumentException("존재하지 않는 게시물입니다.")
 
-        require(post.user.id == user.id) { "게시글 삭제 권한이 없습니다." }
+        require(post.user.id == user.id) { "게시물 삭제 권한이 없습니다." }
 
         if (post.status == PostStatus.BLINDED) {
-            throw IllegalArgumentException("신고로 인해 검토중인 게시글입니다.")
+            throw IllegalArgumentException("신고로 인해 검토중인 게시물입니다.")
         }
 
         val mediaUrlsToDelete = (listOf(post.videoUrl, post.videoThumbnailUrl) + post.imageUrls).distinct()
 
+        postLikeRepository.deleteAllByPostId(postId)
         mediaService.deleteMediaFromR2(mediaUrlsToDelete)
-
         commentRepository.deleteAllByPostId(postId)
-
         userHiddenPostRepository.deleteAllByPostId(postId)
-        reportRepository.deleteAllByPostId(postId)
-
+        reportPostRepository.deleteAllByPostId(postId)
         postRepository.delete(post)
     }
 
@@ -167,12 +172,12 @@ class PostService (
         check(reporter.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
+            ?: throw IllegalArgumentException("해당 게시물을 찾을 수 없습니다.")
 
-        require(post.user.id != reporterId) { "자신의 게시글은 신고할 수 없습니다." }
+        require(post.user.id != reporterId) { "자신의 게시물은 신고할 수 없습니다." }
 
-        if (reportRepository.existsByReporterIdAndPostId(reporterId, postId)) {
-            throw IllegalStateException("이미 신고한 게시글입니다.")
+        if (reportPostRepository.existsByReporterIdAndPostId(reporterId, postId)) {
+            throw IllegalStateException("이미 신고한 게시물입니다.")
         }
 
         val report = ReportPost(
@@ -181,7 +186,7 @@ class PostService (
             reason = reason,
             detail = detail
         )
-        reportRepository.save(report)
+        reportPostRepository.save(report)
 
         post.incrementReportCount()
     }
@@ -194,7 +199,7 @@ class PostService (
         check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
+            ?: throw IllegalArgumentException("해당 게시물을 찾을 수 없습니다.")
 
         if (user.id == post.user.id) {
             post.hide()
@@ -216,7 +221,7 @@ class PostService (
         check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(postId)
-            ?: throw IllegalArgumentException("해당 게시글을 찾을 수 없습니다.")
+            ?: throw IllegalArgumentException("해당 게시물을 찾을 수 없습니다.")
 
         if (user.id == post.user.id) {
             post.unhide()
@@ -242,6 +247,56 @@ class PostService (
         )
 
         return posts.map { PostResponse.from(post = it, currentUserId = currentUserId) }
+    }
+
+    @Transactional(readOnly = true)
+    fun getMyLikedPosts(userId: Long, pageable: Pageable): Slice<PostResponse> {
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
+        val posts = postRepository.findLikedPosts(
+            userId = user.id,
+            status = PostStatus.ACTIVE,
+            pageable = pageable
+        )
+
+        return posts.map { PostResponse.from(post = it, currentUserId = user.id, isLiked = true) }
+    }
+
+    @Transactional
+    fun likePost(userId: Long, postId: Long): LikeResponse {
+        if (postLikeRepository.existsByUserIdAndPostId(userId =  userId, postId =  postId)) {
+            throw IllegalStateException("이미 '좋아요'한 게시물입니다.")
+        }
+        val user = userRepository.findByIdOrNull(userId)
+            ?: throw IllegalArgumentException("Invalid user")
+
+        check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
+
+        val post = postRepository.findByIdOrNull(postId)
+            ?: throw IllegalArgumentException("해당 게시물을 찾을 수 없습니다.")
+
+        val postLike = PostLike(user = user, post = post)
+        postLikeRepository.save(postLike)
+        postRepository.incrementLikeCount(postId)
+
+        return LikeResponse(isLiked = true, likeCount = post.likeCount + 1)
+    }
+
+    @Transactional
+    fun unlikePost(userId: Long, postId: Long): LikeResponse {
+        if (!postLikeRepository.existsByUserIdAndPostId(userId = userId, postId = postId)) {
+            throw IllegalStateException("좋아요를 누르지 않은 게시물입니다.")
+        }
+
+        val post = postRepository.findByIdOrNull(postId)
+            ?: throw IllegalArgumentException("해당 게시물을 찾을 수 없습니다.")
+
+        postLikeRepository.deleteByUserIdAndPostId(userId = userId, postId = postId)
+        postRepository.decrementLikeCount(postId)
+
+        val updatedCount = (post.likeCount - 1).coerceAtLeast(0)
+        return LikeResponse(isLiked = false, likeCount = updatedCount)
     }
 }
 

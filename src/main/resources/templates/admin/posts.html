@@ -30,7 +30,7 @@
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="/admin/reports/posts">Admin - 신고 관리</a>
         <div class="navbar-nav">
-            <a class="nav-link active fw-bold" href="/admin/reports/posts">게시글 신고</a>
+            <a class="nav-link active fw-bold" href="/admin/reports/posts">게시물 신고</a>
             <a class="nav-link text-white-50" href="/admin/reports/comments">댓글 신고</a>
             <a class="nav-link text-white-50" href="/admin/reports/users">유저 신고</a>
         </div>
@@ -71,7 +71,7 @@
                         <th style="width: 5%;">ID</th>
                         <th style="width: 12%;">신고자</th>
                         <th style="width: 12%;">피신고자 (작성자)</th>
-                        <th style="width: 33%;">게시글 정보 및 미디어</th>
+                        <th style="width: 33%;">게시물 정보 및 미디어</th>
                         <th style="width: 17%;">신고 사유</th>
                         <th style="width: 9%;">접수 일시</th>
                         <th style="width: 12%; text-align: center;">조치</th>
@@ -121,7 +121,7 @@
                                         th:hx-patch="|/admin/reports/posts/${report.reportId}/accept|"
                                         th:hx-target="|#report-row-${report.reportId}|"
                                         hx-swap="outerHTML"
-                                        hx-confirm="이 게시글을 블라인드 처리하시겠습니까?">
+                                        hx-confirm="이 게시물을 블라인드 처리하시겠습니까?">
                                     승인
                                 </button>
                                 <button class="btn btn-outline-secondary"
@@ -138,7 +138,7 @@
                                         th:hx-patch="|/admin/reports/posts/${report.reportId}/restore|"
                                         th:hx-target="|#report-row-${report.reportId}|"
                                         hx-swap="outerHTML"
-                                        hx-confirm="게시글 블라인드를 해제하고 정상 상태로 복구하시겠습니까?">
+                                        hx-confirm="게시물 블라인드를 해제하고 정상 상태로 복구하시겠습니까?">
                                     블라인드 해제
                                 </button>
                             </div>

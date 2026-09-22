@@ -1,33 +1,31 @@
-package com.example.backend.userblock
+package com.example.backend.like
 
 import com.example.backend.user.User
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "user_blocks",
+@Table(
+    name = "user_likes",
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uk_blocker_blocked",
-            columnNames = ["blocker_id", "blocked_id"]
+            name = "uk_user_like_from_to",
+            columnNames = ["from_user_id", "to_user_id"]
         )
-    ],
-    indexes = [
-        Index(name = "idx_user_blocks_blocker", columnList = "blocker_id")
     ]
 )
-class UserBlock (
+class UserLike(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "blocker_id", nullable = false)
-    val blocker: User,
+    @JoinColumn(name = "from_user_id", nullable = false)
+    val fromUser: User,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "blocked_id", nullable = false)
-    val blocked: User,
+    @JoinColumn(name = "to_user_id", nullable = false)
+    val toUser: User,
 
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()

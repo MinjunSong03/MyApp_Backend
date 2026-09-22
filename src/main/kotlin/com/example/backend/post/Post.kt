@@ -55,6 +55,9 @@ class Post(
     var status: PostStatus = PostStatus.ACTIVE,
 
     @Column(nullable = false)
+    var likeCount: Long = 0,
+
+    @Column(nullable = false)
     var viewCount: Long = 0,
 
     @Column(nullable = false)

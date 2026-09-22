@@ -36,7 +36,7 @@ class CommentService(
         check(user.status == UserStatus.ACTIVE) { "이용이 정지된 계정입니다." }
 
         val post = postRepository.findByIdOrNull(request.postId)
-            ?: throw IllegalArgumentException("존재하지 않는 게시글입니다.")
+            ?: throw IllegalArgumentException("존재하지 않는 게시물입니다.")
 
         if (post.status != PostStatus.ACTIVE) {
             throw IllegalStateException("활성화 게시물에만 댓글을 작성할 수 있습니다.")
