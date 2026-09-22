@@ -35,6 +35,24 @@ class PostService (
     private val postLikeRepository: PostLikeRepository,
     private val mediaService: MediaService
 ) {
+    private fun toPostResponseSlice(posts: Slice<Post>, currentUserId: Long): Slice<PostResponse> {
+        if (posts.isEmpty) {
+            return posts.map { PostResponse.from(it, currentUserId, false) }
+        }
+
+        val postIds = posts.content.map { it.id }
+
+        val likedPostIdSet = postLikeRepository.findLikedPostIdsByUserIdAndPostIdIn(currentUserId, postIds).toSet()
+
+        return posts.map { post ->
+            PostResponse.from(
+                post = post,
+                currentUserId = currentUserId,
+                isLiked = post.id in likedPostIdSet
+            )
+        }
+    }
+
     @Transactional
     fun createPost(userId: Long, request: CreatePostRequest): PostResponse {
         val user = userRepository.findByIdOrNull(userId)
@@ -60,7 +78,7 @@ class PostService (
 
         val posts = postRepository.findFilteredFeed(PostStatus.ACTIVE, userId, pageable)
 
-        return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
+        return toPostResponseSlice(posts, user.id)
     }
 
     @Transactional(readOnly = true)
@@ -70,7 +88,7 @@ class PostService (
 
         val posts = postRepository.findByStatusAndUserIdAndIsHiddenFalseOrderByCreatedAtDesc(PostStatus.ACTIVE, userId, pageable)
 
-        return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
+        return toPostResponseSlice(posts, user.id)
     }
 
     @Transactional(readOnly = true)
@@ -80,7 +98,7 @@ class PostService (
 
         val posts = postRepository.findByStatusAndUserIdAndIsHiddenTrueOrderByCreatedAtDesc(PostStatus.ACTIVE, userId, pageable)
 
-        return posts.map { PostResponse.from(post = it, currentUserId = user.id) }
+        return toPostResponseSlice(posts, user.id)
     }
 
     @Transactional(readOnly = true)
@@ -93,7 +111,8 @@ class PostService (
 
         require(post.user.id == user.id) { "나의 게시물이 아닙니다." }
 
-        return PostResponse.from(post = post, currentUserId = user.id)
+        val isLiked = postLikeRepository.existsByUserIdAndPostId(userId = user.id, postId = post.id)
+        return PostResponse.from(post = post, currentUserId = user.id, isLiked = isLiked)
     }
 
     @Transactional
@@ -135,7 +154,9 @@ class PostService (
             videoThumbnailUrl = request.videoThumbnailUrl,
             imageUrls = request.imageUrls
             )
-        return PostResponse.from(post, user.id)
+
+        val isLiked = postLikeRepository.existsByUserIdAndPostId(userId = user.id, postId = post.id)
+        return PostResponse.from(post = post, currentUserId = user.id, isLiked = isLiked)
     }
 
     @Transactional
@@ -225,7 +246,8 @@ class PostService (
 
         if (user.id == post.user.id) {
             post.unhide()
-            return PostResponse.from(post = post, currentUserId = userId)
+            val isLiked = postLikeRepository.existsByUserIdAndPostId(userId = user.id, postId = post.id)
+            return PostResponse.from(post = post, currentUserId = userId, isLiked = isLiked)
         } else {
             throw IllegalArgumentException("본인의 게시물만 숨김 해제 가능합니다.")
         }
@@ -246,7 +268,7 @@ class PostService (
             pageable = pageable
         )
 
-        return posts.map { PostResponse.from(post = it, currentUserId = currentUserId) }
+        return toPostResponseSlice(posts, currentUserId)
     }
 
     @Transactional(readOnly = true)

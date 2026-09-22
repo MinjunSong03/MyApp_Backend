@@ -8,6 +8,17 @@ import org.springframework.data.repository.query.Param
 interface PostLikeRepository: JpaRepository<PostLike, Long> {
 
     fun existsByUserIdAndPostId(userId: Long, postId: Long): Boolean
-    fun deleteByUserIdAndPostId(userId: Long, postId: Long)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM PostLike pl WHERE pl.user.id = :userId AND pl.post.id = :postId")
+    fun deleteByUserIdAndPostId(@Param("userId") userId: Long, @Param("postId") postId: Long)
     fun deleteAllByPostId(postId: Long)
+
+    @Query("""
+        SELECT pl.post.id FROM PostLike pl 
+        WHERE pl.user.id = :userId AND pl.post.id IN :postIds
+    """)
+    fun findLikedPostIdsByUserIdAndPostIdIn(
+        @Param("userId") userId: Long,
+        @Param("postIds") postIds: List<Long>
+    ): List<Long>
 }

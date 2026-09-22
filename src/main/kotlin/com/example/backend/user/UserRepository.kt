@@ -21,7 +21,7 @@ interface UserRepository: JpaRepository<User, Long> {
     @Query("""
         SELECT ul.toUser FROM UserLike ul
         WHERE ul.fromUser.id = :userId
-          AND ul.toUser.status = :bannedStatus
+          AND ul.toUser.status != :bannedStatus
           AND ul.toUser.id NOT IN (
               SELECT ub.blocked.id FROM UserBlock ub WHERE ub.blocker.id = :userId
           )

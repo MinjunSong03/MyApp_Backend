@@ -149,11 +149,7 @@ class PostController(
     @GetMapping("/my_likes")
     fun getMyLikedPosts(
         @CurrentUserId userId: Long,
-        @PageableDefault(
-            size = 10,
-            sort = ["id"],
-            direction = Sort.Direction.DESC
-        ) pageable: Pageable
+        @PageableDefault(size = 10) pageable: Pageable
     ): Slice<PostResponse> {
         return postService.getMyLikedPosts(userId, pageable)
     }

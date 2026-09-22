@@ -7,5 +7,10 @@ import org.springframework.data.repository.query.Param
 
 interface UserLikeRepository: JpaRepository<UserLike, Long> {
     fun existsByFromUserIdAndToUserId(fromUserId: Long, toUserId: Long): Boolean
-    fun deleteByFromUserIdAndToUserId(fromUserId: Long, toUserId: Long)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM UserLike ul WHERE ul.fromUser.id = :fromUserId AND ul.toUser.id = :toUserId")
+    fun deleteByFromUserIdAndToUserId(
+        @Param("fromUserId") fromUserId: Long,
+        @Param("toUserId") toUserId: Long
+    )
 }

@@ -48,11 +48,11 @@ interface PostRepository: JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.viewCount = p.viewCount + 1 WHERE p.id = :postId")
     fun incrementViewCount(@Param("postId") postId: Long)
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = p.likeCount + 1 WHERE p.id = :postId")
     fun incrementLikeCount(@Param("postId") postId: Long)
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = p.likeCount - 1 WHERE p.id = :postId AND p.likeCount > 0")
     fun decrementLikeCount(@Param("postId") postId: Long)
 

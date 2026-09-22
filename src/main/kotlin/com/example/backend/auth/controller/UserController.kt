@@ -97,11 +97,7 @@ class UserController(
     @GetMapping("/my_likes")
     fun getMyLikedUsers(
         @CurrentUserId userId: Long,
-        @PageableDefault(
-            size = 10,
-            sort = ["id"],
-            direction = Sort.Direction.DESC
-        ) pageable: Pageable
+        @PageableDefault(size = 10) pageable: Pageable
     ): Slice<UserResponse> {
         return userService.getMyLikedUsers(userId, pageable)
     }
